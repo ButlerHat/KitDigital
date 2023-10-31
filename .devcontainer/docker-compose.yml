@@ -1,0 +1,29 @@
+version: '3.7'
+services:
+  kitdigital_dev:
+    build:
+      context: ..
+      # Dockerfile is relative to context
+      dockerfile: .devcontainer/Dockerfile
+      args:
+        USER_ID: ${USER_ID}
+        GROUP_ID: ${GROUP_ID}
+        PYPI_USER: ${PYPI_USER}
+        PYPI_PASS: ${PYPI_PASS}
+      target: base
+    container_name: kitdigital_dev
+    init: true
+    user: vscode
+    volumes:
+      - ${HOME}/urjc_chapo/ai-butlerhat:/workspaces/ai-butlerhat:cached
+      - ${HOME}/.ssh:/home/vscode/.ssh:cached
+    cap_add:
+      - SYS_ADMIN
+    shm_size: '2gb'
+    networks:
+      - external
+    command: /bin/sh -c "while sleep 1000; do :; done"
+
+networks:
+  external:
+    name: net_robot

@@ -1,0 +1,7 @@
+{
+    "robot.language-server.python": "/opt/conda/envs/robotframework/bin/python",
+    "pylint.path": [
+        "/opt/conda/envs/web_env/bin/pylint"
+    ],
+    "python.analysis.autoImportCompletions": true
+}
