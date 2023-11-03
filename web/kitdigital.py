@@ -14,13 +14,34 @@ class StageStatus(Enum):
     PROGRESS = "PROGRESS"
     SKIP = "SKIP"
 
+    def __str__(self):
+        return f"StageStatus: {self.value}"
+    
+    def __hash__(self):
+        return hash(self.value)
+    
+    def __eq__(self, other):
+        return hash(self) == hash(other)
 
 class StageType(Enum):
     """
     Enum class for stage types
     """
-    CRAWL_URLS = "URLS"
+    CRAWL_URLS = "CRAWL_URLS"
     DIRECTORIES = "DIRECTORIES"
+    CALLUPCONTACT = "CALLUPCONTACT"
+    DONDEESTAMOS = "DONDEESTAMOS"
+    TRAVELFUL = "TRAVELFUL"
+
+    def __str__(self):
+        return f"StageType: {self.value}"
+    
+    def __hash__(self):
+        return hash(self.value)
+    
+    def __eq__(self, other):
+        return hash(self) == hash(other)
+        
 
 
 class Stage:
@@ -28,7 +49,8 @@ class Stage:
         self.name: str = name
         self.status: StageStatus = status
         self.results_path: str = results_path
-        self.info: str = ""
+        self.info: dict = {}
+        
         if not os.path.exists(self.results_path):
             os.makedirs(self.results_path, exist_ok=True)
 
@@ -51,31 +73,41 @@ class Stage:
 
 
 class KitDigital:
-    result_path_root = st.secrets.paths.result_kit
+    result_path_root: str = st.secrets.paths.result_kit
 
     def __init__(self, url: str) -> None:
+        self.id: str = KitDigital._get_id(url)
         self.url: str = url
-        self.id: str = url.replace("https://", "").replace("http://", "").replace("/", "")
+        self.contact_email: str = ""
         self.results_path: str = os.path.join(self.result_path_root, self.id)
         self.info_file: str = os.path.join(self.results_path, "info_kit.yaml")
         self.stages: dict[StageType, Stage] = {
             StageType.CRAWL_URLS: Stage("Obtención De Urls", os.path.join(self.results_path, "urls")),
-            StageType.DIRECTORIES: Stage("Subida a Directorios", os.path.join(self.results_path, "directories"))
+            StageType.DIRECTORIES: Stage("Subida a Directorios", os.path.join(self.results_path, "directories")),
+            StageType.CALLUPCONTACT: Stage("Call Up Contact", os.path.join(self.results_path, "callupcontact")),
+            StageType.DONDEESTAMOS: Stage("Donde Estamos", os.path.join(self.results_path, "dondeestamos")),
+            StageType.TRAVELFUL: Stage("Travelful", os.path.join(self.results_path, "travelful"))
         }
+        
         if not os.path.exists(self.results_path):
             os.makedirs(self.results_path, exist_ok=True)
             self.to_yaml()
-
-    def set_url(self, url):
-        self.url = url
     
+    @staticmethod
+    def _get_id(url: str) -> str:
+        return url.replace("https://", "").replace("http://", "").replace("/", "")
+
     def set_results_path(self, results_path):
         self.results_path = results_path
+
+    def set_contact_email(self, contact_email):
+        self.contact_email = contact_email
 
     def to_dict(self):
         return {
             "id": self.id,
             "url": self.url,
+            "contact_email": self.contact_email,
             "results_path": self.results_path,
             "stages": {
                 stage_name.value: stage.to_dict() for stage_name, stage in self.stages.items()
@@ -83,13 +115,14 @@ class KitDigital:
         }
     
     def to_yaml(self):
-        with open(self.info_file, 'w') as f:
+        with open(self.info_file, 'w', encoding='UTF8') as f:
             yaml.dump(self.to_dict(), f)
 
     @classmethod
     def from_dict(cls, data):
         url = data["url"]
         kit_digital = cls(url)
+        kit_digital.contact_email = data["contact_email"]
         kit_digital.id = data["id"]
         kit_digital.results_path = data["results_path"]
         kit_digital.stages = {
@@ -99,13 +132,13 @@ class KitDigital:
     
     @classmethod
     def from_yaml(cls, path):
-        with open(path, 'r') as f:
+        with open(path, 'r', encoding='UTF8') as f:
             data = yaml.load(f, Loader=yaml.FullLoader)
         return cls.from_dict(data)
     
     @staticmethod
-    def get_kit_digital(url: str) -> "KitDigital" | None:
-        kit_id = url.replace("https://", "").replace("http://", "").replace("/", "_")
+    def get_kit_digital(url: str):
+        kit_id = KitDigital._get_id(url)
         results_path = os.path.join(KitDigital.result_path_root, kit_id)
         info_file = os.path.join(results_path, "info_kit.yaml")
         if os.path.exists(info_file):

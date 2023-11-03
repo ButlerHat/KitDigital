@@ -1,18 +1,20 @@
 *** Settings ***
 Documentation  Funciona perfecto
-Library       ButlerRobot.AIBrowserLibrary  fix_bbox=${TRUE}  presentation_mode=${True}  console=${False}  record=${True}  WITH NAME  Browser
-Variables      /workspaces/robotframework/dev/spider_repo/Utils/variables.py  ${info_file}
+Library       ButlerRobot.AIBrowserLibrary  fix_bbox=${TRUE}  presentation_mode=${True}  console=${False}  record=${False}  WITH NAME  Browser
+Library       OperatingSystem
+Variables      /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/citaciones/utils/variables.py  ${info_file}
 
 
 *** Variables ***
-${info_file}  /tmp/last_company_k2.json
+# ${info_file}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/directories/company.json
+# ${RETURN_FILE}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/travelful/msg.csv
 # ${email}  calderea@bluepath.es
 # ${username}  caldereabp  # Debe ser unica
 # ${password}  calderascitation5
 # ${city}  Madrid
 ${country}  Spain
 
-# ${company}  # Debe ser unica
+# ${company_name}  # Debe ser unica
 # ${address}
 # ${website}
 # ${phone}
@@ -20,16 +22,28 @@ ${country}  Spain
 
 *** Test Cases ***
 travelful
-    ${username}  Evaluate  f'${username}{random.randint(0, 9)}{random.randint(0, 9)}{random.randint(0, 9)}{random.randint(0, 9)}'  modules=random
+    [Tags]  travelful
+    # ${username}  Evaluate  f'${username}{random.randint(0, 9)}{random.randint(0, 9)}{random.randint(0, 9)}{random.randint(0, 9)}'  modules=random
 
-    Browser.New Stealth Persistent Context  browser=chromium  headless=${False}  url=http://www.travelful.net/register.asp
+    Browser.New Stealth Persistent Context  userDataDir=/tmp/travelful  browser=chromium  headless=${False}  url=http://www.travelful.net/register.asp
     Write ${username} at Nombre
     Write ${email} at Email
     Write ${password} at Password
     Write ${password} at Confirm password
     Click at Register
+
+    TRY
+        Wait For Elements State    xpath=//a[text()="Add a location »"]  visible  timeout=10s
+    EXCEPT
+        # Get message this user already exists
+        ${el_user}  Get Element Count    //span[contains(text(), "user")][contains(text(), "exists")]
+        
+        IF  ${el_user} > 0   Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},travelful,FAIL,VariableError:username,El usuario ya está usado en travelful.net${\n}
+        Fail  El usuario ya está usado en travelful.net
+    END
+
     Click at Add a location
-    Write ${company} at Name
+    Write ${company_name} at Name
     Write ${address} at Address
     Write ${city} at City
     Write ${country} at Country
@@ -42,6 +56,12 @@ travelful
     Sleep  1
     ${url}  Get public url
     Log  La empresa se ha creado correctamente: ${url}	console=${True}	
+    
+    Go To  ${url}
+    Run Keyword And Ignore Error  Wait Until Network Is Idle
+    Take Screenshot  fullPage=${True}  filename=${OUTPUT_DIR}${/}travelful.png
+    
+    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},travelful,PASS,,URL:${url}|SCREENSHOT:${OUTPUT_DIR}${/}travelful.png${\n}
 
 
 *** Keywords ***
@@ -68,8 +88,8 @@ Click at Register
 Click at Add a location
     Browser.Click    xpath=//a[text()="Add a location »"]
 
-Write ${company} at Name
-    Browser.Type Text    xpath=//input[@id="title"]    ${company}
+Write ${company_name} at Name
+    Browser.Type Text    xpath=//input[@id="title"]    ${company_name}
 
 Write ${address} at Address
     Browser.Type Text    xpath=//input[@id="formatted_address"]    ${address}

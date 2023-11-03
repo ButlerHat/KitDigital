@@ -1,33 +1,62 @@
 *** Settings ***
 Documentation  All good
 Library       ButlerRobot.AIBrowserLibrary  stealth_mode=${True}  fix_bbox=${TRUE}  presentation_mode=${True}  console=${False}  record=${False}  WITH NAME  Browser
-Variables  /workspaces/robotframework/dev/spider_repo/Utils/variables.py  ${info_file}
+Library       OperatingSystem
+Library       Collections
+Variables  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/citaciones/utils/variables.py  ${info_file}
 
 
 *** Variables ***
-${info_file}  /tmp/last_company_prueba.json
-${email}  jose.cortes@bluepath.es
+${localidad_email}  jose.cartilagos@bluepath.es
+${localidad_password}  pepe1234
+# ${province_dondeestamos}  Madrid
+
+
+# ${info_file}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/directories/company.json
+# ${RETURN_FILE}  ${OUTPUT_DIR}${/}return_msg.csv  # columns: 1) ID_EXECUTION, 2) ROBOT, 3) STATUS, 4) EXCEPTION, 5) MESSAGE
+# ${ID_EXECUTION}  0
+# ${email}  jose.cortinas@bluepath.es
 # ${username}    Torrejo 
 # ${password}  calderascitation6
 # ${keywords}  Calderas
-# ${province}  Madrid
+# ${dondeestamos_province}  Madrid
 # ${postal}  28850
 # ${category_dondeestamos}  Servicios
 
-# ${120char_description}  Líderes en calderas y sistemas de calefacción. Calidad, eficiencia y confianza para tu hogar. ¡Calienta tus inviernos con nosotros!${\n}
+# ${long_description}  Líderes en calderas y sistemas de calefacción. Calidad, eficiencia y confianza para tu hogar. ¡Calienta tus inviernos con nosotros!${\n}
 
-# From Json
-# ${website}
-# ${phone}
-# ${company}
-# ${description}
-# ${address}
+# # From Json    
+# ${website}  https://google.com
+# ${phone}    666666666
+# ${company_name}  Torrejon de Ardoz Calderas
+# ${description}    Líderes en calderas y sistemas de calefacción. Calidad, eficiencia y confianza para tu hogar. ¡Calienta tus inviernos con nosotros!
+# ${address}  Calle de la Constitución, 1, 28850 Torrejón de Ardoz, Madrid
 
 
 *** Test Cases ***
-dondeestamos
-    ${username}  Evaluate  f'${username}{random.randint(0, 9)}{random.randint(0, 9)}{random.randint(0, 9)}{random.randint(0, 9)}'  modules=random
+Get Localidad
+    [Tags]  get_localidad
+
+    Browser.New Browser  chromium  headless=${False}
+    Browser.New Context
+    Browser.New Page  url=https://www.donde-estamos.es/alta-empresa
+
+    Run Keyword And Ignore Error  Accept cookies
+    Type ${localidad_email} in email usuario
+    Write ${localidad_password} in contraseña
+    Click on login
+
+    @{options}  Get Localidad from ${province_dondeestamos}
+    ${options_no_commas}  Evaluate  "${options}".replace(',', ';')
     
+    Log  ${options}  console=${True}
+    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},dondeestamos,PASS,,${options_no_commas}${\n}
+
+
+dondeestamos
+    [Tags]  dondeestamos
+    # ${username}  Evaluate  f'${username}{random.randint(0, 9)}{random.randint(0, 9)}{random.randint(0, 9)}{random.randint(0, 9)}'  modules=random
+
     Browser.New Browser  chromium  headless=${False}
     Browser.New Context
     Browser.New Page  url=https://www.donde-estamos.es/alta-empresa
@@ -40,25 +69,48 @@ dondeestamos
     Type ${password} in repeat password
     Submit
 
+    Comment  Email in use
+    TRY
+        Get Element  //*[@id='business_name']
+    EXCEPT
+        # Check if usuario ya esta en uso
+        ${el_usuario}  Get Element Count  //li[contains(text(),'usuario ya')]
+        IF  ${el_usuario} > 0   Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},dondeestamos,FAIL,VariableError:username,El usuario ya está usado en donde-estamos.es${\n}
+        
+        # Check if email ya esta en uso
+        ${el_email}  Get Element Count  //li[contains(text(),'correo ya')]
+        IF  ${el_email} > 0   Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},dondeestamos,FAIL,VariableError:email,El correo ya está usado en donde-estamos.es${\n}
+
+        Fail  Usuario no creado
+    END
+
     Click on alta gratuita
-    Scroll By  vertical=100%
-    Input ${company} in nombre de la empresa
+
+    Input ${company_name} in nombre de la empresa
     Select ${category_dondeestamos} in categoria
     Input ${keywords} in Actividad
-    Select ${province} in localidad
+    Select ${dondeestamos_province.split("-")[0].strip()} in localidad
     Input ${address} in direccion
     Input ${postal} in codigo postal
-    Scroll By  vertical=100%
     Write ${phone} in telefono
     Input ${email} in email
     Write ${website} in web
-    Scroll By  vertical=100%
-    Type ${120char_description} in descripcion
+    Type ${long_description} in descripcion
     Click on grabar datos de la empresa
 
-    ${url}  Get Url
-    Log  Empresa creada: ${url}
+    ${url_result}  Get Url
+    IF  "${url_result}" == "https://www.donde-estamos.es/alta-empresa"
+        Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},dondeestamos,FAIL,,No se ha podido obtener la url${\n}
+        Fail  Empresa no creada
+    END
 
+    Log  Empresa creada: ${url_result}
+    
+    Go To  ${url_result}
+    Run Keyword And Ignore Error  Wait Until Network Is Idle
+    Take Screenshot  fullPage=${True}  filename=${OUTPUT_DIR}${/}dondeestamos.png
+    
+    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},dondeestamos,PASS,,URL:${url_result}|SCREENSHOT:${OUTPUT_DIR}${/}dondeestamos.png${\n}
 
 
 *** Keywords ***
@@ -68,6 +120,40 @@ Accept cookies
 
 Click on registrarse
     Browser.Click  //a[contains(@class, 'btn-info')]
+
+Type ${localidad_email} in email usuario
+    Browser.Click  //*[@id="username"]
+    Browser.Keyboard Input    type    ${localidad_email}
+
+Write ${localidad_password} in contraseña
+    Browser.Click  //*[@id="password"]
+    Browser.Keyboard Input    type    ${localidad_password}
+
+Click on login
+    Browser.Click  //*[@id="_submit"]
+
+Get Localidad from ${province_dondeestamos}
+    [Tags]  no_record
+    Browser.Click  //*[@id='business_city']/../span[1]
+    Sleep  1
+    Browser.Keyboard Input    type    ${province_dondeestamos}
+    Wait For Elements State    //ul[@id='select2-business_city-results']//*[contains(text(),'Buscando')]  visible
+    Wait For Elements State    //ul[@id='select2-business_city-results']//*[contains(text(),'Buscando')]  hidden
+    @{provinces}  Get Elements  //ul[@id='select2-business_city-results'] 
+    @{text_provinces}  Create List
+    
+    IF  len(${provinces}) == 0
+        Log  No se ha encontrado la provincia ${province_dondeestamos}
+        Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},dondeestamos,FAIL,VariableError:email,No hay localidades en ${province_dondeestamos}${\n}
+        Fail  No se ha encontrado la provincia ${province_dondeestamos}
+    END
+
+    FOR  ${dondeestamos_province}  IN  @{provinces}
+        ${text_province}  Get Text  ${dondeestamos_province}
+        Append To List  ${text_provinces}  @{text_province.split('\n')}
+    END
+
+    RETURN  ${text_provinces}
 
 Write ${username} in nombre de usuario
     Browser.Click  //*[@id='fos_user_registration_form_username']
@@ -91,9 +177,9 @@ Submit
 Click on alta gratuita
     Browser.Click  //a[text()='Alta gratuita']
 
-Input ${company} in nombre de la empresa
+Input ${company_name} in nombre de la empresa
     Browser.Click  //*[@id='business_name']
-    Browser.Keyboard Input    type    ${company}
+    Browser.Keyboard Input    type    ${company_name}
     
 Select ${category_dondeestamos} in categoria
     Browser.Select Options By  //*[@id='business_sector']  label  ${category_dondeestamos}
@@ -102,11 +188,11 @@ Input ${keywords} in Actividad
     Browser.Click  //*[@id='business_activity']
     Browser.Keyboard Input    type    ${keywords}
 
-Select ${province} in localidad
+Select ${dondeestamos_province} in localidad
     Browser.Click  //*[@id='business_city']/../span[1]
     Sleep  1
-    Browser.Keyboard Input    type    ${province}
-    Browser.Click  (//*[@id='select2-business_city-results']//b[contains(text(),'${province}')])[1]
+    Browser.Keyboard Input    type    ${dondeestamos_province}
+    Browser.Click  (//*[@id='select2-business_city-results']//b[contains(text(),'${dondeestamos_province}')])[1]
 
 Input ${address} in direccion
     Browser.Click  //*[@id='business_address']
@@ -128,9 +214,9 @@ Write ${website} in web
     Browser.Click  //*[@id='business_web']
     Browser.Keyboard Input    type    ${website}
 
-Type ${120char_description} in descripcion
+Type ${long_description} in descripcion
     Browser.Click  //*[@id='business_comments']
-    Browser.Keyboard Input    type    ${120char_description}
+    Browser.Keyboard Input    type    ${long_description}
 
 Click on grabar datos de la empresa
     Browser.Click  //button[@type='submit']

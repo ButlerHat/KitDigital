@@ -1,15 +1,15 @@
 *** Settings ***
 Library       ButlerRobot.AIBrowserLibrary  fix_bbox=${TRUE}  presentation_mode=${True}  console=${False}  record=${True}  WITH NAME  Browser
 Library       OperatingSystem
-Library       /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/citaciones/file_manager.py
+Library       /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/citaciones/utils/file_manager.py
 
 *** Variables ***
 ${url}  https://goo.gl/maps/tkixTKKXDf1qACjv5
 
 
-${info_file}  /tmp/last_company_k2.json
+${info_file}  last_company.json
 
-${email}  k2energia@bluepath.es
+${email}  jose.cortes@bluepath.es
 ${name}    K2
 ${surname}    Calderas
 # Password must be at least 10 characters 
@@ -43,6 +43,7 @@ ${logo}  /workspaces/robotframework/dev/spider_repo/Robots/citaciones/static/IMG
 
 *** Test Cases ***
 ReadFromMaps
+    [Tags]  robot:exclude
     ${username}  Evaluate  f'${username}{random.randint(0, 9)}{random.randint(0, 9)}{random.randint(0, 9)}{random.randint(0, 9)}'  modules=random
 
     New Browser    chromium    headless=${False}
@@ -50,8 +51,8 @@ ReadFromMaps
     New Page    url=${url}
     Log To Console    message=URL: ${url}
 
-    ${company}  Get Title
-    Log To Console    message=Company: ${company}
+    ${company_name}  Get Title
+    Log To Console    message=Company: ${company_name}
     ${address}  Get address
     Log To Console    message=Address: ${address}
     ${website}  Get website
@@ -63,7 +64,7 @@ ReadFromMaps
 
     Close Browser
 
-    ${company_dict}  Create Dictionary  company=${company}  
+    ${company_dict}  Create Dictionary  company=${company_name}  
     ...  address=${address}  
     ...  website=${website}  
     ...  phone=${phone}  
@@ -107,8 +108,8 @@ ReadFromMaps
 
 *** Keywords ***
 Get Title
-    ${company}   Browser.Get Text  xpath=//h1
-    RETURN  ${company}
+    ${company_name}   Browser.Get Text  xpath=//h1
+    RETURN  ${company_name}
 
 Get address
     ${address}  Browser.Get Text    xpath=//button[@data-item-id="address"]//div[text()]

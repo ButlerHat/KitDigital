@@ -1,31 +1,34 @@
 *** Settings ***
 Documentation  All good
 Library       ButlerRobot.AIBrowserLibrary  stealth_mode=${True}  fix_bbox=${TRUE}  presentation_mode=${True}  console=${False}  record=${False}  WITH NAME  Browser
-Variables  /workspaces/robotframework/dev/spider_repo/Utils/variables.py  ${info_file}
+Library       OperatingSystem
+Variables     /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/citaciones/utils/variables.py  ${info_file}
 
 
 *** Variables ***
 ${CAPTCHA_API_KEY}  1b5b309b37e0231099f023aa9e96de0b
-${info_file}  /tmp/last_company_k2.json
+# ${info_file}  /tmp/last_company_k2.json
 # ${email}  ventcal@bluepath.es
 # ${name}    Ventcal
 # ${surname}    Torrejo 
 # ${password}  calderascitation6
 # ${cif}  39832477L
 ${country}  Spain  # English
-${keywords}  Calderas
+# ${keywords}  Calderas
 # ${province}  Madrid
 
 # From Json
 # ${website}
 # ${phone}
-# ${company}
+# ${company_name}
 # ${description}
 # ${address}
 
 
 *** Test Cases ***
 callupcontact
+    [Tags]  callupcontact
+    
     Browser.New Browser  chromium  headless=${False}
     Browser.New Context
     Browser.New Page  url=https://www.callupcontact.com/active/register/register.php?
@@ -35,7 +38,7 @@ callupcontact
     Write ${password} at Password  ${password}
     Write ${country} at Country  ${country}
     Click on registrar
-    Write ${company} at Business Name  ${company}
+    Write ${company_name} at Business Name  ${company_name}
     Write ${keywords} at Keywords  ${keywords}
     Write ${province} at Province  ${province}
     Write ${description} at Description  ${description}
@@ -47,7 +50,13 @@ callupcontact
     Click at Next
 
     ${url}  Get Href of Work Group
-    Log  Empresa ${company} creada en ${url}  console=${True}
+    Log  Empresa ${company_name} creada en ${url}  console=${True}
+    
+    Go To  ${url}
+    Run Keyword And Ignore Error  Wait Until Network Is Idle
+    Take Screenshot  fullPage=${True}  filename=${OUTPUT_DIR}${/}callupcontact.png
+    
+    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},callupcontact,PASS,,URL:${url}|SCREENSHOT:${OUTPUT_DIR}${/}callupcontact.png${\n}
 
 
 *** Keywords ***
@@ -70,9 +79,9 @@ Write ${country} at Country
 Click on registrar
     Browser.Click    xpath=//input[@name="submit"]
 
-Write ${company} at Business Name
-    [Arguments]   ${company}
-    Browser.Type Text    xpath=//input[@name="first_name"]    ${company}
+Write ${company_name} at Business Name
+    [Arguments]   ${company_name}
+    Browser.Type Text    xpath=//input[@name="first_name"]    ${company_name}
 
 Write ${keywords} at Keywords
     [Arguments]   ${keywords}

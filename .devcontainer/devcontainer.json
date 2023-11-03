@@ -17,7 +17,7 @@
 
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// May be need to install -e /workspaces/robotframework-lsp/robotframework-interactive/src
-	"postCreateCommand": "pip install --user -e /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat[browser_stealth] && /opt/conda/envs/robotframework/bin/python -m Browser.entry init",
+	"postCreateCommand": "bash .devcontainer/prodPostCreateCommand.sh",
 
 	// Configure tool-specific properties.
 	"customizations":{

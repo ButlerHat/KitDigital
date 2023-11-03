@@ -1,18 +1,19 @@
 *** Settings ***
-Library    Browser
+Library    ButlerRobot.AIBrowserLibrary  stealth_mode=${True}  record=${False}  console=${False}  presentation_mode=${True}  WITH NAME  Browser 
 Library    OperatingSystem
+
 
 *** Variables ***
 ${URL}    https://djadelpeluqueria.es/
-${OUTPUT_FILE}  misurls.txt
+${RETURN_FILE}  ${OUTPUT_DIR}${/}msg.csv
 ${MAX_DEPTH}  1
-
+${ID_EXECUTION}  0
 
 
 *** Test Cases ***
 
 Obtener URLs de la Página Principal
-       [Setup]   Borrar el archivo
+       [Setup]   Crear Archivo si no existe
        Crawl Site    ${URL}  max_depth_to_crawl=${MAX_DEPTH}   page_crawl_keyword=Miaccion
 
 *** Keywords ***
@@ -20,7 +21,11 @@ Miaccion
     ${url}=       Get Url
     ${is_file}  Evaluate  bool("${url.split("/")[-1]}")
     IF  ${is_file}  RETURN  
-    Append To File    ${OUTPUT_FILE}    ${url}${\n}
+    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},KitD_Paginas,PASS,,${url}${\n}
 
-Borrar el archivo
-     Remove File    ${OUTPUT_FILE}
+
+Crear Archivo si no existe
+    ${is_file}  Evaluate  bool(os.path.isfile("${RETURN_FILE}"))  modules=os
+    IF  ${is_file}  RETURN  
+    Create File    ${RETURN_FILE}
+    Append To File    ${RETURN_FILE}  id_execution,robot,status,exception,msg${\n}

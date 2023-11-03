@@ -3,5 +3,8 @@
     "pylint.path": [
         "/opt/conda/envs/web_env/bin/pylint"
     ],
+    "pylint.args": [
+        "--disable=C0303",
+    ],
     "python.analysis.autoImportCompletions": true
 }

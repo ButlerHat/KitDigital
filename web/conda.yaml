@@ -11,3 +11,5 @@ dependencies:
   - pip:
       # Define pip packages here -> https://pypi.org/
       - streamlit
+      - openpyxl
+      - pyyaml
