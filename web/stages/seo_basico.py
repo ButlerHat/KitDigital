@@ -10,16 +10,16 @@ def set_seo_basico(kit_digital: KitDigital) -> KitDigital:
     st.markdown("## Descripcion del SEO Básico")
 
     stage_info: dict = kit_digital.stages[StageType.SEO_BASICO].info
-    company_name_default: str = stage_info["company_name"] if stage_info is not None else ""
+    company_name_default: str = stage_info["company_name"] if "company_name" in stage_info else ""
     
     if company_name_default == "" and "company_data" in kit_digital.stages[StageType.DIRECTORIES].info:
         company_name_default = kit_digital.stages[StageType.DIRECTORIES].info["company_data"]["company_name"]
 
-    city_default: str = stage_info["city"] if stage_info is not None else ""
+    city_default: str = stage_info["city"] if "city" in stage_info else ""
     if city_default == "" and "company_data" in kit_digital.stages[StageType.DIRECTORIES].info:
         city_default = kit_digital.stages[StageType.DIRECTORIES].info["company_data"]["city"]
 
-    keywords_default: str = stage_info["keywords"] if stage_info is not None else ""
+    keywords_default: str = stage_info["keywords"] if "keywords" in stage_info else ""
     if keywords_default == "" and "company_data" in kit_digital.stages[StageType.DIRECTORIES].info:
         keywords_default = kit_digital.stages[StageType.DIRECTORIES].info["company_data"]["keywords"]
 

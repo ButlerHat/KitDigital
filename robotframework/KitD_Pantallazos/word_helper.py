@@ -11,6 +11,15 @@ def create_new_document(filename):
 def append_text_and_picture_to_document(filename, identificador, text, picture, width_inches: float=6.0):
     doc = Document(filename)
     
+    if not identificador:
+        doc.add_paragraph()
+        if text:
+            doc.add_paragraph(text)
+        if picture:
+            doc.add_picture(picture, width=Inches(width_inches))
+        doc.save(filename)
+        return
+
     finded = False
     for paragraph in doc.paragraphs:
         for run in paragraph.runs:

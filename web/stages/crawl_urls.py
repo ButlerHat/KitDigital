@@ -104,18 +104,6 @@ def crawl_urls(kit_digital: KitDigital) -> KitDigital:
     kit_d: KitDigital | None = KitDigital.get_kit_digital(kit_digital.url)
     kit_digital = kit_d if kit_d else kit_digital
 
-    # Ask for valid urls
-    if kit_digital.stages[StageType.CRAWL_URLS].status == StageStatus.PASS:
-        st.markdown("### Selecciona las urls válidas")
-        with st.form("Selecciona las urls válidas"):
-            urls = st.selectbox("Selecciona las urls válidas", urls_stage.info["suggested_urls"])
-            if st.form_submit_button("Enviar"):
-                stage = kit_digital.stages[StageType.SELECT_URLS]
-                stage.status = StageStatus.PASS
-                stage.info["urls"] = urls
-                kit_digital.stages[StageType.SELECT_URLS] = stage
-                kit_digital.to_yaml()
-
     return kit_digital
 
 

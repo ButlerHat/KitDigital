@@ -13,3 +13,4 @@ dependencies:
       - streamlit
       - openpyxl
       - pyyaml
+      - extra_streamlit_components

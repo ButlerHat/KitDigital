@@ -27,6 +27,7 @@ class StageType(Enum):
     """
     Enum class for stage types
     """
+    ACCEPT_COOKIES = "ACCEPT_COOKIES"
     CRAWL_URLS = "CRAWL_URLS"
     SELECT_URLS = "SELECT_URLS"
     DIRECTORIES = "DIRECTORIES"
@@ -90,6 +91,7 @@ class KitDigital:
         self.info_file: str = os.path.join(self.results_path, "info_kit.yaml")
         self.word_file: str = os.path.join(self.results_path, "evidencias.docx")
         self.stages: dict[StageType, Stage] = {
+            StageType.ACCEPT_COOKIES: Stage("Aceptación De Cookies", os.path.join(self.results_path, "accept_cookies")),
             StageType.CRAWL_URLS: Stage("Obtención De Urls", os.path.join(self.results_path, "urls")),
             StageType.SELECT_URLS: Stage("Selección De Urls", os.path.join(self.results_path, "select_urls")),
             StageType.DIRECTORIES: Stage("Subida a Directorios", os.path.join(self.results_path, "directories")),

@@ -54,19 +54,9 @@ Get Title Screenshots and versions for URLs
         END
     END
 
-    # Copy template
-    # Copy File    ${WORD_FILE_TEMPLATE}  ${WORD_FILE}
-
-    # Create New Document    ${WORD_FILE}
-    ${urls_incomplete}  Check If Identifier Exists    ${WORD_FILE}    {PANTALLAZOS_WEB}
-
-    IF  ${urls_incomplete}
-        FOR    ${url}    IN    @{urls}
-            Open URL and Get Info    ${url}
-        END
-        Remove Identifier    ${WORD_FILE}    {PANTALLAZOS_WEB}
+    FOR    ${url}    IN    @{urls}
+        Open URL and Get Info    ${url}
     END
-    
 
     Take Different Version Screenshots    ${urls[0]}
     Append To File    ${RETURN_FILE}    ${\n}${ID_EXECUTION},KitD_PantallazosUrls.robot,PASS,,Se han anadido los pantallazos de los dispositivos${\n}
@@ -105,20 +95,6 @@ Take Different Version Screenshots
     Take Screenshot  filename=${OUTPUT_DIR}${/}desktop_screenshot.png
     Close Browser
 
-    ${is_movil}  Check If Identifier Exists    ${WORD_FILE}    {PANTALLAZO_WEB_MOVIL}
-    IF  ${is_movil}
-        Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZO_WEB_MOVIL}   ${movil}     ${OUTPUT_DIR}${/}mobile_screenshot.png    width_inches=3.5
-        Remove Identifier    ${WORD_FILE}    {PANTALLAZO_WEB_MOVIL}
-    END
-
-    ${is_tableta}  Check If Identifier Exists    ${WORD_FILE}    {PANTALLAZO_WEB_TABLETA}
-    IF  ${is_tableta}
-        Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZO_WEB_TABLETA}   ${tableta}     ${OUTPUT_DIR}${/}ipad_screenshot.png   width_inches=4
-        Remove Identifier    ${WORD_FILE}    {PANTALLAZO_WEB_TABLETA}
-    END
-    
-    ${is_escritorio}  Check If Identifier Exists    ${WORD_FILE}    {PANTALLAZO_WEB_ESCRITORIO}
-    IF  ${is_escritorio}
-        Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZO_WEB_ESCRITORIO}   ${escritorio}     ${OUTPUT_DIR}${/}desktop_screenshot.png
-        Remove Identifier    ${WORD_FILE}    {PANTALLAZO_WEB_ESCRITORIO}
-    END
+    Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZO_WEB_MOVIL}   ${movil}     ${OUTPUT_DIR}${/}mobile_screenshot.png    width_inches=3.5
+    Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZO_WEB_TABLETA}   ${tableta}     ${OUTPUT_DIR}${/}ipad_screenshot.png   width_inches=4
+    Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZO_WEB_ESCRITORIO}   ${escritorio}     ${OUTPUT_DIR}${/}desktop_screenshot.png

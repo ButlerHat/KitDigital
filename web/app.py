@@ -1,4 +1,7 @@
 import streamlit as st
+import streamlit.components.v1 as components
+import extra_streamlit_components as stx
+from stages.accept_cookies import accept_cookies
 from stages.directories import directories
 from stages.crawl_urls import crawl_urls, select_urls
 from stages.seo_basico import set_seo_basico
@@ -10,6 +13,40 @@ from kitdigital import KitDigital, Stage, StageStatus, StageType
 
 
 # Probar con: https://djadelpeluqueria.es/
+
+def restart_stage(kit_d: KitDigital, stage_type: StageType, optional_stages: list[StageType] | None =None) -> KitDigital:
+    """
+    Restart a stage.
+    """
+    if optional_stages is None:
+        optional_stages = []
+
+    restart = st.button("Reiniciar Stage", type='primary')
+    if restart or st.session_state.get(f'ask_{stage_type}', False):
+        if f'ask_{stage_type}' not in st.session_state:
+            st.session_state[f'ask_{stage_type}'] = True
+        if restart:
+            st.session_state[f'ask_{stage_type}'] = True
+        st.warning("¿Estás seguro de que quieres reiniciar esta etapa? Se perderán los datos que hayas introducido.")
+        yes_button = st.button("Sí, reiniciar etapa", type='primary')
+        no_button = st.button("No, no reiniciar etapa")
+        if yes_button:
+            stage: Stage = kit_d.stages[stage_type]
+            stage.status = StageStatus.PENDING
+            stage.info = {}
+            kit_d.stages[stage_type] = stage
+            for stage_type in optional_stages:
+                stage: Stage = kit_d.stages[stage_type]
+                stage.status = StageStatus.PENDING
+                stage.info = {}
+                kit_d.stages[stage_type] = stage
+            kit_d.to_yaml()
+            st.session_state[f'ask_{stage_type}'] = False
+        elif no_button:
+            st.session_state[f'ask_{stage_type}'] = False
+
+
+    return kit_d
 
 def get_create_kit_digital() -> KitDigital:
     """
@@ -41,6 +78,31 @@ def get_create_kit_digital() -> KitDigital:
     return kit_d
 
 
+def display_title(msg: str, status: StageStatus):
+    """
+    Display title.
+    """
+    if status == StageStatus.PASS:
+        status_msg = '✅ <span style="color:green">Completado:</span>'
+    elif status == StageStatus.FAIL:
+        status_msg = '❌ <span style="color:red">Fallo:</span>'
+    elif status == StageStatus.PENDING:
+        status_msg = '🕒 <span style="color:blue">Pendiente:</span>'
+    elif status == StageStatus.PROGRESS:
+        status_msg = '🕒 <span style="color:orange">En progreso:</span>'
+    else:
+        status_msg = ""
+
+    st.markdown(f'# {status_msg} {msg}', unsafe_allow_html=True)
+
+st.set_page_config(
+    page_title="Kit Digital",
+    page_icon=":robot:",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+
 with st.sidebar:
     logo_path = st.secrets["paths"]["logo_path"]
     st.image(logo_path)
@@ -50,8 +112,6 @@ st.markdown("# Kit Digital")
 
 st.markdown("---")
 
-st.markdown("## Datos para la elaboración de la justificación.")
-
 
 # Create Kit Digital
 created_kit_digital: KitDigital | None = None
@@ -60,117 +120,170 @@ created_kit_digital = get_create_kit_digital()
 assert created_kit_digital is not None, "No se ha podido crear el kit digital."
 kit_digital: KitDigital = created_kit_digital
 
+val = stx.stepper_bar(steps=["Aceptar cookies", "Seleccionar Urls", "Subir Directorios", "Seo Básico", "Obtener H1, H2, H3", "Obtener el logo de Kit Digital", "Pantallazos Urls", "Pantallazos Multiidioma"])
+
 # Crawl urls
-st.markdown("## Obtención de urls")
-if kit_digital.stages[StageType.CRAWL_URLS].status != StageStatus.PASS:
-    kit_digital = crawl_urls(kit_digital)
-    st.stop()
+if val == 0:
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        display_title("Aceptar cookies", kit_digital.stages[StageType.ACCEPT_COOKIES].status)
+    with col2:
+        restart_stage(kit_digital, StageType.ACCEPT_COOKIES)
+    components.iframe("http://localhost:29388/", height=600)
+    if kit_digital.stages[StageType.ACCEPT_COOKIES].status != StageStatus.PASS:
+        kit_digital = accept_cookies(kit_digital)
+    
+    # Show cookies
+    if kit_digital.stages[StageType.ACCEPT_COOKIES].status == StageStatus.PASS:
+        st.write("Se han aceptado las cookies")
 
-# Show suggested urls
-if kit_digital.stages[StageType.CRAWL_URLS].status == StageStatus.PASS:
-    urls_stage: Stage = kit_digital.stages[StageType.CRAWL_URLS]
-    st.write(urls_stage.info["suggested_urls"])
+if val == 1:
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        display_title("Obtener urls", kit_digital.stages[StageType.CRAWL_URLS].status)
+    with col2:
+        restart_stage(kit_digital, StageType.CRAWL_URLS, optional_stages=[StageType.SELECT_URLS])
+    if kit_digital.stages[StageType.CRAWL_URLS].status != StageStatus.PASS:
+        kit_digital = crawl_urls(kit_digital)
 
-# Select urls
-st.markdown("## Seleccion de urls")
-if kit_digital.stages[StageType.SELECT_URLS].status != StageStatus.PASS:
-    kit_digital = select_urls(kit_digital)
-    st.stop()
+    # Show suggested urls
+    if kit_digital.stages[StageType.CRAWL_URLS].status == StageStatus.PASS:
+        urls_stage: Stage = kit_digital.stages[StageType.CRAWL_URLS]
+        st.write(urls_stage.info["suggested_urls"])
 
-# Show urls
-if kit_digital.stages[StageType.SELECT_URLS].status == StageStatus.PASS:
-    urls_stage: Stage = kit_digital.stages[StageType.SELECT_URLS]
-    st.write(urls_stage.info["urls"])
+    # Select urls
+    st.markdown("## Seleccion de urls")
+    if kit_digital.stages[StageType.SELECT_URLS].status != StageStatus.PASS:
+        kit_digital = select_urls(kit_digital)
 
-st.markdown("## Subida a directorios")
-# Directories
-if kit_digital.stages[StageType.DIRECTORIES].status != StageStatus.PASS:
-    kit_digital = directories(kit_digital)
-    st.stop()
+    # Show urls
+    if kit_digital.stages[StageType.SELECT_URLS].status == StageStatus.PASS:
+        urls_stage: Stage = kit_digital.stages[StageType.SELECT_URLS]
+        st.write(urls_stage.info["urls"])
 
-# Show directories
-if kit_digital.stages[StageType.DIRECTORIES].status == StageStatus.PASS:
-    st.markdown("### Callupcontact")
-    st.write(kit_digital.stages[StageType.CALLUPCONTACT])
-    st.markdown("### Donde estamos")
-    st.write(kit_digital.stages[StageType.DONDEESTAMOS])
-    st.markdown("### Travelful")
-    st.write(kit_digital.stages[StageType.TRAVELFUL])
+if val == 2:
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        display_title("Subir directorios", kit_digital.stages[StageType.DIRECTORIES].status)
+    with col2:
+        restart_stage(kit_digital, StageType.DIRECTORIES, optional_stages=[StageType.CALLUPCONTACT, StageType.DONDEESTAMOS, StageType.TRAVELFUL])
+    # Directories
+    if kit_digital.stages[StageType.DIRECTORIES].status != StageStatus.PASS:
+        kit_digital = directories(kit_digital)
 
-# SEO Basico
-st.markdown("## SEO Básico 1")
-if kit_digital.stages[StageType.SEO_BASICO].status != StageStatus.PASS:
-    kit_digital = set_seo_basico(kit_digital)
-    st.stop()
+    # Show directories
+    if kit_digital.stages[StageType.DIRECTORIES].status == StageStatus.PASS:
+        st.markdown("### Callupcontact")
+        with st.expander("Evidencia Callupcontact", expanded=False):
+            st.image(kit_digital.stages[StageType.CALLUPCONTACT].info["screenshot"])
+        
+        st.markdown("### Donde estamos")
+        with st.expander("Evidencia Donde estamos", expanded=False):
+            st.image(kit_digital.stages[StageType.DONDEESTAMOS].info["screenshot"])
+        
+        st.markdown("### Travelful")
+        with st.expander("Evidencia Travelful", expanded=False):
+            st.image(kit_digital.stages[StageType.TRAVELFUL].info["screenshot"])
 
-# Show SEO Basico
-if kit_digital.stages[StageType.SEO_BASICO].status == StageStatus.PASS:
-    st.markdown(kit_digital.stages[StageType.SEO_BASICO].info["text_before_headers"])
-    st.markdown(kit_digital.stages[StageType.SEO_BASICO].info["text_after_headers"])
-    st.markdown(kit_digital.stages[StageType.SEO_BASICO].info["multiidioma"])
+if val == 3:
+    # SEO Basico
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        display_title("SEO Básico", kit_digital.stages[StageType.SEO_BASICO].status)
+    with col2:
+        restart_stage(kit_digital, StageType.SEO_BASICO)
+    if kit_digital.stages[StageType.SEO_BASICO].status != StageStatus.PASS:
+        kit_digital = set_seo_basico(kit_digital)
 
-# Headers SEO
-st.markdown("## SEO Básico 2")
-if kit_digital.stages[StageType.HEADERS_SEO].status != StageStatus.PASS:
-    get_headers(kit_digital)
-    st.stop()
+    # Show SEO Basico
+    if kit_digital.stages[StageType.SEO_BASICO].status == StageStatus.PASS:
+        st.markdown(kit_digital.stages[StageType.SEO_BASICO].info["text_before_headers"])
+        st.markdown(kit_digital.stages[StageType.SEO_BASICO].info["text_after_headers"])
+        st.markdown(kit_digital.stages[StageType.SEO_BASICO].info["multiidioma"])
 
-# Show Headers SEO
-if kit_digital.stages[StageType.HEADERS_SEO].status == StageStatus.PASS:
-    st.write(kit_digital.stages[StageType.HEADERS_SEO].info["suggested_h1"])
-    st.write(kit_digital.stages[StageType.HEADERS_SEO].info["suggested_h2"])
-    st.write(kit_digital.stages[StageType.HEADERS_SEO].info["suggested_h3"])
+if val == 4:
+    # Headers SEO
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        display_title("Obtener H1, H2, H3", kit_digital.stages[StageType.HEADERS_SEO].status)
+    if kit_digital.stages[StageType.HEADERS_SEO].status != StageStatus.PASS:
+        get_headers(kit_digital)
 
-# Acreditacion cumplimiento en materia de publicidad
-st.markdown("## Acreditación cumplimiento en materia de publicidad")
-if kit_digital.stages[StageType.LOGO_KIT_DIGITAL].status != StageStatus.PASS:
-    get_logo_kit(kit_digital)
-    st.stop()
+    # Show Headers SEO
+    if kit_digital.stages[StageType.HEADERS_SEO].status == StageStatus.PASS:
+        stage_info = kit_digital.stages[StageType.HEADERS_SEO].info
+        h1, h2, h3 = stage_info["suggested_h1"], stage_info["suggested_h2"], stage_info["suggested_h3"]
+        for title, header in zip(["H1", "H2", "H3"], [h1, h2, h3]):
+            st.markdown(f"### {title}")
+            for h in header:
+                st.write(h)
 
-# Show Acreditacion cumplimiento en materia de publicidad
-if kit_digital.stages[StageType.LOGO_KIT_DIGITAL].status == StageStatus.PASS:
-    st.image(kit_digital.stages[StageType.LOGO_KIT_DIGITAL].info["screenshot"])
-    with open(kit_digital.stages[StageType.LOGO_KIT_DIGITAL].info["word"], "rb") as f:
-        st.download_button(
-            label="Descargar documento",
-            data=f,
-            file_name="pantallazo_logo.docx",
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        )
+if val == 5:
+    # Acreditacion cumplimiento en materia de publicidad
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        display_title("Obtener el logo de Kit Digital", kit_digital.stages[StageType.LOGO_KIT_DIGITAL].status)
+    with col2:
+        restart_stage(kit_digital, StageType.LOGO_KIT_DIGITAL)
 
-# Plantilla de recopilacion de evidencias
-st.markdown("## Plantilla de recopilación de evidencias 1: Pantallazos")
-if kit_digital.stages[StageType.PANTALLAZOS_URLS].status != StageStatus.PASS:
-    get_pantallazos_urls(kit_digital)
-    st.stop()
+    if kit_digital.stages[StageType.LOGO_KIT_DIGITAL].status != StageStatus.PASS:
+        get_logo_kit(kit_digital)
 
-# Show Plantilla de recopilacion de evidencias
-if kit_digital.stages[StageType.PANTALLAZOS_URLS].status == StageStatus.PASS:
-    with open(kit_digital.stages[StageType.PANTALLAZOS_URLS].info["word"], "rb") as f:
-        st.download_button(
-            label="Descargar documento",
-            data=f,
-            file_name="pantallazos_urls.docx",
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            key="pantallazos_urls"
-        )
+    # Show Acreditacion cumplimiento en materia de publicidad
+    if kit_digital.stages[StageType.LOGO_KIT_DIGITAL].status == StageStatus.PASS:
+        st.image(kit_digital.stages[StageType.LOGO_KIT_DIGITAL].info["screenshot"])
+        with open(kit_digital.stages[StageType.LOGO_KIT_DIGITAL].info["word"], "rb") as f:
+            st.download_button(
+                label="Descargar documento",
+                data=f,
+                file_name="pantallazo_logo.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            )
 
-# Plantilla de recopilacion de evidencias multi-idioma
-st.markdown("## Plantilla de recopilación de evidencias 2: Pantallazos multi-idioma")
-if kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status != StageStatus.PASS:
-    get_pantallazos_multiidioma(kit_digital)
-    st.stop()
+if val == 6:
+    # Plantilla de recopilacion de evidencias
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        display_title("Plantilla de recopilación de evidencias 1: Pantallazos", kit_digital.stages[StageType.PANTALLAZOS_URLS].status)
+    with col2:
+        restart_stage(kit_digital, StageType.PANTALLAZOS_URLS)
 
-# Show Plantilla de recopilacion de evidencias multi-idioma
-if kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status == StageStatus.PASS:
-    with open(kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].info["word"], "rb") as f:
-        st.download_button(
-            label="Descargar documento",
-            data=f,
-            file_name="pantallazos_multiidioma.docx",
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            key="pantallazos_multiidioma"
-        )
+    if kit_digital.stages[StageType.PANTALLAZOS_URLS].status != StageStatus.PASS:
+        get_pantallazos_urls(kit_digital)
+
+    # Show Plantilla de recopilacion de evidencias
+    if kit_digital.stages[StageType.PANTALLAZOS_URLS].status == StageStatus.PASS:
+        with open(kit_digital.stages[StageType.PANTALLAZOS_URLS].info["word"], "rb") as f:
+            st.download_button(
+                label="Descargar documento",
+                data=f,
+                file_name="pantallazos_urls.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                key="pantallazos_urls"
+            )
+
+if val == 7:
+    # Plantilla de recopilacion de evidencias multi-idioma
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        display_title("Plantilla de recopilación de evidencias 2: Pantallazos multi-idioma", kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status)
+    with col2:
+        restart_stage(kit_digital, StageType.PANTALLAZOS_MULTIIDIOMA)
+    
+    components.iframe("http://localhost:29388/", height=600)
+    if kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status != StageStatus.PASS:
+        get_pantallazos_multiidioma(kit_digital)
+
+    # Show Plantilla de recopilacion de evidencias multi-idioma
+    if kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status == StageStatus.PASS:
+        with open(kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].info["word"], "rb") as f:
+            st.download_button(
+                label="Descargar documento",
+                data=f,
+                file_name="pantallazos_multiidioma.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                key="pantallazos_multiidioma"
+            )
 
 
 
