@@ -2,11 +2,13 @@
 Documentation  All good
 Library       ButlerRobot.AIBrowserLibrary  stealth_mode=${True}  fix_bbox=${TRUE}  presentation_mode=${True}  console=${False}  record=${False}  WITH NAME  Browser
 Library       OperatingSystem
+Library    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/KitD_Pantallazos/word_helper.py
 Variables     /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/citaciones/utils/variables.py  ${info_file}
 
 
 *** Variables ***
 ${CAPTCHA_API_KEY}  1b5b309b37e0231099f023aa9e96de0b
+${WORD_FILE}    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/evidencias.docx
 # ${info_file}  /tmp/last_company_k2.json
 # ${email}  ventcal@bluepath.es
 # ${name}    Ventcal
@@ -56,6 +58,7 @@ callupcontact
     Run Keyword And Ignore Error  Wait Until Network Is Idle
     Take Screenshot  fullPage=${True}  filename=${OUTPUT_DIR}${/}callupcontact.png
     
+    Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Callupcontact    ${OUTPUT_DIR}${/}callupcontact.png
     Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},callupcontact,PASS,,URL:${url}|SCREENSHOT:${OUTPUT_DIR}${/}callupcontact.png${\n}
 
 

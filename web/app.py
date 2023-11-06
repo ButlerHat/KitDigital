@@ -5,6 +5,7 @@ from stages.seo_basico import set_seo_basico
 from stages.headers import get_headers
 from stages.logo_kit import get_logo_kit
 from stages.pantallazos_urls import get_pantallazos_urls
+from stages.pantallazos_multiidioma import get_pantallazos_multiidioma
 from kitdigital import KitDigital, Stage, StageStatus, StageType
 
 
@@ -63,6 +64,7 @@ kit_digital: KitDigital = created_kit_digital
 st.markdown("## Obtención de urls")
 if kit_digital.stages[StageType.CRAWL_URLS].status != StageStatus.PASS:
     kit_digital = crawl_urls(kit_digital)
+    st.stop()
 
 # Show suggested urls
 if kit_digital.stages[StageType.CRAWL_URLS].status == StageStatus.PASS:
@@ -73,6 +75,7 @@ if kit_digital.stages[StageType.CRAWL_URLS].status == StageStatus.PASS:
 st.markdown("## Seleccion de urls")
 if kit_digital.stages[StageType.SELECT_URLS].status != StageStatus.PASS:
     kit_digital = select_urls(kit_digital)
+    st.stop()
 
 # Show urls
 if kit_digital.stages[StageType.SELECT_URLS].status == StageStatus.PASS:
@@ -83,12 +86,7 @@ st.markdown("## Subida a directorios")
 # Directories
 if kit_digital.stages[StageType.DIRECTORIES].status != StageStatus.PASS:
     kit_digital = directories(kit_digital)
-    st.markdown("### Callupcontact")
-    st.write(kit_digital.stages[StageType.CALLUPCONTACT])
-    st.markdown("### Donde estamos")
-    st.write(kit_digital.stages[StageType.DONDEESTAMOS])
-    st.markdown("### Travelful")
-    st.write(kit_digital.stages[StageType.TRAVELFUL])
+    st.stop()
 
 # Show directories
 if kit_digital.stages[StageType.DIRECTORIES].status == StageStatus.PASS:
@@ -103,6 +101,7 @@ if kit_digital.stages[StageType.DIRECTORIES].status == StageStatus.PASS:
 st.markdown("## SEO Básico 1")
 if kit_digital.stages[StageType.SEO_BASICO].status != StageStatus.PASS:
     kit_digital = set_seo_basico(kit_digital)
+    st.stop()
 
 # Show SEO Basico
 if kit_digital.stages[StageType.SEO_BASICO].status == StageStatus.PASS:
@@ -114,6 +113,7 @@ if kit_digital.stages[StageType.SEO_BASICO].status == StageStatus.PASS:
 st.markdown("## SEO Básico 2")
 if kit_digital.stages[StageType.HEADERS_SEO].status != StageStatus.PASS:
     get_headers(kit_digital)
+    st.stop()
 
 # Show Headers SEO
 if kit_digital.stages[StageType.HEADERS_SEO].status == StageStatus.PASS:
@@ -125,6 +125,7 @@ if kit_digital.stages[StageType.HEADERS_SEO].status == StageStatus.PASS:
 st.markdown("## Acreditación cumplimiento en materia de publicidad")
 if kit_digital.stages[StageType.LOGO_KIT_DIGITAL].status != StageStatus.PASS:
     get_logo_kit(kit_digital)
+    st.stop()
 
 # Show Acreditacion cumplimiento en materia de publicidad
 if kit_digital.stages[StageType.LOGO_KIT_DIGITAL].status == StageStatus.PASS:
@@ -138,9 +139,10 @@ if kit_digital.stages[StageType.LOGO_KIT_DIGITAL].status == StageStatus.PASS:
         )
 
 # Plantilla de recopilacion de evidencias
-st.markdown("## Plantilla de recopilación de evidencias 1: Pantallazos logo")
+st.markdown("## Plantilla de recopilación de evidencias 1: Pantallazos")
 if kit_digital.stages[StageType.PANTALLAZOS_URLS].status != StageStatus.PASS:
     get_pantallazos_urls(kit_digital)
+    st.stop()
 
 # Show Plantilla de recopilacion de evidencias
 if kit_digital.stages[StageType.PANTALLAZOS_URLS].status == StageStatus.PASS:
@@ -149,7 +151,26 @@ if kit_digital.stages[StageType.PANTALLAZOS_URLS].status == StageStatus.PASS:
             label="Descargar documento",
             data=f,
             file_name="pantallazos_urls.docx",
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            key="pantallazos_urls"
         )
+
+# Plantilla de recopilacion de evidencias multi-idioma
+st.markdown("## Plantilla de recopilación de evidencias 2: Pantallazos multi-idioma")
+if kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status != StageStatus.PASS:
+    get_pantallazos_multiidioma(kit_digital)
+    st.stop()
+
+# Show Plantilla de recopilacion de evidencias multi-idioma
+if kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status == StageStatus.PASS:
+    with open(kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].info["word"], "rb") as f:
+        st.download_button(
+            label="Descargar documento",
+            data=f,
+            file_name="pantallazos_multiidioma.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            key="pantallazos_multiidioma"
+        )
+
 
 

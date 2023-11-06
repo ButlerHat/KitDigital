@@ -2,10 +2,13 @@
 Documentation  Funciona perfecto
 Library       ButlerRobot.AIBrowserLibrary  fix_bbox=${TRUE}  presentation_mode=${True}  console=${False}  record=${False}  WITH NAME  Browser
 Library       OperatingSystem
+Library    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/KitD_Pantallazos/word_helper.py
 Variables      /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/citaciones/utils/variables.py  ${info_file}
 
 
 *** Variables ***
+${WORD_FILE}    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/evidencias.docx
+
 # ${info_file}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/directories/company.json
 # ${RETURN_FILE}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/travelful/msg.csv
 # ${email}  calderea@bluepath.es
@@ -38,7 +41,7 @@ travelful
         # Get message this user already exists
         ${el_user}  Get Element Count    //span[contains(text(), "user")][contains(text(), "exists")]
         
-        IF  ${el_user} > 0   Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},travelful,FAIL,VariableError:username,El usuario ya está usado en travelful.net${\n}
+        IF  ${el_user} > 0   Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},travelful,FAIL,VariableError:username,El usuario ${username} ya está usado en travelful.net${\n}
         Fail  El usuario ya está usado en travelful.net
     END
 
@@ -61,6 +64,7 @@ travelful
     Run Keyword And Ignore Error  Wait Until Network Is Idle
     Take Screenshot  fullPage=${True}  filename=${OUTPUT_DIR}${/}travelful.png
     
+    Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Travelful    ${OUTPUT_DIR}${/}travelful.png
     Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},travelful,PASS,,URL:${url}|SCREENSHOT:${OUTPUT_DIR}${/}travelful.png${\n}
 
 

@@ -37,6 +37,7 @@ class StageType(Enum):
     HEADERS_SEO = "HEADERS_SEO"
     LOGO_KIT_DIGITAL = "LOGO_KIT_DIGITAL"
     PANTALLAZOS_URLS = "PANTALLAZOS_URLS"
+    PANTALLAZOS_MULTIIDIOMA = "PANTALLAZOS_MULTIIDIOMA"
 
     def __str__(self):
         return f"StageType: {self.value}"
@@ -98,7 +99,8 @@ class KitDigital:
             StageType.SEO_BASICO: Stage("SEO Básico", os.path.join(self.results_path, "seo_basico")),
             StageType.HEADERS_SEO: Stage("Headers SEO", os.path.join(self.results_path, "headers_seo")),
             StageType.LOGO_KIT_DIGITAL: Stage("Logo Kit Digital", os.path.join(self.results_path, "logo_kit_digital")),
-            StageType.PANTALLAZOS_URLS: Stage("Pantallazos Urls", os.path.join(self.results_path, "pantallazos_urls"))
+            StageType.PANTALLAZOS_URLS: Stage("Pantallazos Urls", os.path.join(self.results_path, "pantallazos_urls")),
+            StageType.PANTALLAZOS_MULTIIDIOMA: Stage("Pantallazos Multiidioma", os.path.join(self.results_path, "pantallazos_multiidioma")),
         }
         
         if not os.path.exists(self.results_path):

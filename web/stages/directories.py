@@ -304,7 +304,7 @@ def callback_robot(ret_val: int | None, result_path: str, kwargs_callbacks: dict
 
         # Show error messages
         for i in range(len(df_retry)):
-            if df_retry["exception"].iloc[i].contains("VariableError", na=False):
+            if "VariableError" in df_retry["exception"].iloc[i]:
                 variable = df_retry["exception"].iloc[i].split("VariableError:")[1].strip()
                 msg = df_retry["msg"].iloc[i]
                 st.warning(f"Error en la variable {variable}: {msg}")

@@ -3,10 +3,13 @@ Documentation  All good
 Library       ButlerRobot.AIBrowserLibrary  stealth_mode=${True}  fix_bbox=${TRUE}  presentation_mode=${True}  console=${False}  record=${False}  WITH NAME  Browser
 Library       OperatingSystem
 Library       Collections
+Library    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/KitD_Pantallazos/word_helper.py
 Variables  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/citaciones/utils/variables.py  ${info_file}
 
 
 *** Variables ***
+${WORD_FILE}    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/evidencias.docx
+
 ${localidad_email}  jose.cartilagos@bluepath.es
 ${localidad_password}  pepe1234
 # ${province_dondeestamos}  Madrid
@@ -110,8 +113,8 @@ dondeestamos
     Run Keyword And Ignore Error  Wait Until Network Is Idle
     Take Screenshot  fullPage=${True}  filename=${OUTPUT_DIR}${/}dondeestamos.png
     
+    Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Donde estamos   ${OUTPUT_DIR}${/}dondeestamos.png
     Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},dondeestamos,PASS,,URL:${url_result}|SCREENSHOT:${OUTPUT_DIR}${/}dondeestamos.png${\n}
-
 
 *** Keywords ***
 
