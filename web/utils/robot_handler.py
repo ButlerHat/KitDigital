@@ -117,7 +117,7 @@ async def run_robot(
     for callback in callbacks:
         callback(ret_val, result_path, kwargs_callbacks, {
             "id_": id_,
-            "vars": vars_,
+            "vars_": vars_,
             "robot": robot,
             "output_dir": output_dir,
             "msg_info": msg_info,

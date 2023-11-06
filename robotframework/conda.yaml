@@ -13,6 +13,7 @@ dependencies:
   - python=3.10                 # https://pyreadiness.org/3.10/ 
   - nodejs=16.14.2              # https://github.com/nodejs/node/blob/main/CHANGELOG.md
   - pip=22.1.2                  # https://pip.pypa.io/en/stable/news/
-  # - pip:
+  - pip:
+    - python-docx
       # Define pip packages here -> https://pypi.org/
       # - robotframework-dist-butlerhat[browser_stealth] > Defined in post-install command with -e

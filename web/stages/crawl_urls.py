@@ -3,6 +3,7 @@ import asyncio
 import datetime
 import pandas as pd
 import numpy as np
+import streamlit as st
 import utils.robot_handler as robot_handler
 import utils.notifications as notifications
 from kitdigital import KitDigital, Stage, StageStatus, StageType
@@ -16,7 +17,7 @@ def callback_crawl(ret_val: int | None, result_path: str, kwargs_callbacks: dict
     kwargs_callbacks: dict - kwargs of callbacks
     Arguments in run_robot_kwargs:
         id_: str, 
-        vars: list, 
+        vars_: list, 
         robot: str, 
         output_dir: str | None = None, 
         callback: list[Callable[[dict], None]] = [],
@@ -32,7 +33,7 @@ def callback_crawl(ret_val: int | None, result_path: str, kwargs_callbacks: dict
     kit_digital: KitDigital = kwargs_callbacks["kit_digital"]
 
     # Get variables
-    vars_ = run_robot_kwargs["vars"]
+    vars_ = run_robot_kwargs["vars_"]
     id_execution = [x for x in vars_ if "ID_EXECUTION" in x][0].split(":")[1].strip('"')
     msg_csv = [x for x in vars_ if "RETURN_FILE" in x][0].split(":")[1].strip('"')
 
@@ -97,6 +98,48 @@ def crawl_urls(kit_digital: KitDigital) -> KitDigital:
     kit_digital.stages[StageType.CRAWL_URLS] = urls_stage
     kit_digital.to_yaml()
     
-    run_robot(kit_digital, urls_stage.results_path)
+    run_robot(kit_digital, urls_stage.results_path)  # Here store kit digital to yaml
+
+    # Refresh kit digital
+    kit_d: KitDigital | None = KitDigital.get_kit_digital(kit_digital.url)
+    kit_digital = kit_d if kit_d else kit_digital
+
+    # Ask for valid urls
+    if kit_digital.stages[StageType.CRAWL_URLS].status == StageStatus.PASS:
+        st.markdown("### Selecciona las urls válidas")
+        with st.form("Selecciona las urls válidas"):
+            urls = st.selectbox("Selecciona las urls válidas", urls_stage.info["suggested_urls"])
+            if st.form_submit_button("Enviar"):
+                stage = kit_digital.stages[StageType.SELECT_URLS]
+                stage.status = StageStatus.PASS
+                stage.info["urls"] = urls
+                kit_digital.stages[StageType.SELECT_URLS] = stage
+                kit_digital.to_yaml()
+
+    return kit_digital
+
+
+def select_urls(kit_digital: KitDigital) -> KitDigital:
+    # Create Urls Stage
+    urls_stage: Stage = kit_digital.stages[StageType.SELECT_URLS]
+    kit_digital.stages[StageType.SELECT_URLS] = urls_stage
+    kit_digital.to_yaml()
+
+    # Ask for valid urls
+    if kit_digital.stages[StageType.CRAWL_URLS].status == StageStatus.PASS:
+        suggested_urls = kit_digital.stages[StageType.CRAWL_URLS].info["suggested_urls"]
+        st.markdown("### Selecciona las urls válidas")
+        with st.form("Selecciona las urls válidas"):
+            urls = st.multiselect("Selecciona las urls válidas", suggested_urls)
+            if st.form_submit_button("Enviar"):
+                stage = kit_digital.stages[StageType.SELECT_URLS]
+                stage.status = StageStatus.PASS
+                stage.info["urls"] = urls
+                kit_digital.stages[StageType.SELECT_URLS] = stage
+                kit_digital.to_yaml()
+
+    else:
+        st.warning("Se deben obtener las urls de la página previamente.")
+        st.stop()
 
     return kit_digital

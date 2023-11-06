@@ -1,6 +1,6 @@
 import os
-import yaml
 from enum import Enum
+import yaml
 import streamlit as st
 
 
@@ -28,10 +28,15 @@ class StageType(Enum):
     Enum class for stage types
     """
     CRAWL_URLS = "CRAWL_URLS"
+    SELECT_URLS = "SELECT_URLS"
     DIRECTORIES = "DIRECTORIES"
     CALLUPCONTACT = "CALLUPCONTACT"
     DONDEESTAMOS = "DONDEESTAMOS"
     TRAVELFUL = "TRAVELFUL"
+    SEO_BASICO = "SEO_BASICO"
+    HEADERS_SEO = "HEADERS_SEO"
+    LOGO_KIT_DIGITAL = "LOGO_KIT_DIGITAL"
+    PANTALLAZOS_URLS = "PANTALLAZOS_URLS"
 
     def __str__(self):
         return f"StageType: {self.value}"
@@ -80,18 +85,29 @@ class KitDigital:
         self.url: str = url
         self.contact_email: str = ""
         self.results_path: str = os.path.join(self.result_path_root, self.id)
+        self.cookies_dir: str = os.path.join(self.results_path, "cookies")
         self.info_file: str = os.path.join(self.results_path, "info_kit.yaml")
+        self.word_file: str = os.path.join(self.results_path, "evidencias.docx")
         self.stages: dict[StageType, Stage] = {
             StageType.CRAWL_URLS: Stage("Obtención De Urls", os.path.join(self.results_path, "urls")),
+            StageType.SELECT_URLS: Stage("Selección De Urls", os.path.join(self.results_path, "select_urls")),
             StageType.DIRECTORIES: Stage("Subida a Directorios", os.path.join(self.results_path, "directories")),
             StageType.CALLUPCONTACT: Stage("Call Up Contact", os.path.join(self.results_path, "callupcontact")),
             StageType.DONDEESTAMOS: Stage("Donde Estamos", os.path.join(self.results_path, "dondeestamos")),
-            StageType.TRAVELFUL: Stage("Travelful", os.path.join(self.results_path, "travelful"))
+            StageType.TRAVELFUL: Stage("Travelful", os.path.join(self.results_path, "travelful")),
+            StageType.SEO_BASICO: Stage("SEO Básico", os.path.join(self.results_path, "seo_basico")),
+            StageType.HEADERS_SEO: Stage("Headers SEO", os.path.join(self.results_path, "headers_seo")),
+            StageType.LOGO_KIT_DIGITAL: Stage("Logo Kit Digital", os.path.join(self.results_path, "logo_kit_digital")),
+            StageType.PANTALLAZOS_URLS: Stage("Pantallazos Urls", os.path.join(self.results_path, "pantallazos_urls"))
         }
         
         if not os.path.exists(self.results_path):
             os.makedirs(self.results_path, exist_ok=True)
             self.to_yaml()
+        
+        if not os.path.exists(self.word_file):
+            # Copy from template
+            os.system(f"cp {st.secrets.paths.word_template} {self.word_file}")
     
     @staticmethod
     def _get_id(url: str) -> str:
@@ -109,6 +125,8 @@ class KitDigital:
             "url": self.url,
             "contact_email": self.contact_email,
             "results_path": self.results_path,
+            "cookies_dir": self.cookies_dir,
+            "word_file": self.word_file,
             "stages": {
                 stage_name.value: stage.to_dict() for stage_name, stage in self.stages.items()
             }
@@ -125,6 +143,8 @@ class KitDigital:
         kit_digital.contact_email = data["contact_email"]
         kit_digital.id = data["id"]
         kit_digital.results_path = data["results_path"]
+        kit_digital.cookies_dir = data["cookies_dir"]
+        kit_digital.word_file = data["word_file"]
         kit_digital.stages = {
             StageType(stage_name): Stage.from_dict(stage_data) for stage_name, stage_data in data["stages"].items()
         }

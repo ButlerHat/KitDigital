@@ -227,7 +227,7 @@ def callback_robot(ret_val: int | None, result_path: str, kwargs_callbacks: dict
     kwargs_callbacks: dict - kwargs of callbacks
     Arguments in run_robot_kwargs:
         id_: str, 
-        vars: list, 
+        vars_: list, 
         robot: str, 
         output_dir: str | None = None, 
         callback: list[Callable[[dict], None]] = [],
@@ -241,7 +241,7 @@ def callback_robot(ret_val: int | None, result_path: str, kwargs_callbacks: dict
     kit_digital: KitDigital = kwargs_callbacks["kit_digital"]
 
     # Get variables
-    vars_ = run_robot_kwargs["vars"]
+    vars_ = run_robot_kwargs["vars_"]
     id_execution = [x for x in vars_ if "ID_EXECUTION" in x][0].split(":")[1].strip('"')
     msg_csv = [x for x in vars_ if "RETURN_FILE" in x][0].split(":")[1].strip('"')
 
