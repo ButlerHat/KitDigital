@@ -21,16 +21,16 @@ Library    OperatingSystem
 Library    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/KitD_Pantallazos/word_helper.py
 
 *** Variables ***
-${url1}    https://djadelpeluqueria.es/
-${url2}    https://djadelpeluqueria.es/blog/
-${url3}    https://djadelpeluqueria.es/servicios/
-${url4}    https://djadelpeluqueria.es/contacto/
-${url5}    https://djadelpeluqueria.es/galeria-de-fotos/
-${url6}    https://djadelpeluqueria.es/acerca-de/
+# ${url1}    https://djadelpeluqueria.es/
+# ${url2}    https://djadelpeluqueria.es/blog/
+# ${url3}    https://djadelpeluqueria.es/servicios/
+# ${url4}    https://djadelpeluqueria.es/contacto/
+# ${url5}    https://djadelpeluqueria.es/galeria-de-fotos/
+# ${url6}    https://djadelpeluqueria.es/acerca-de/
 
 ${RETURN_FILE}  ${OUTPUT_DIR}${/}msg.csv
 ${ID_EXECUTION}  0
-${COOKIES_DIR}   /tmp/djadelpeluqueria
+# ${COOKIES_DIR}   /tmp/djadelpeluqueria
 ${WORD_FILE_TEMPLATE}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/KitD_Pantallazos/Plantilla.docx
 ${WORD_FILE}    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/KitD_Pantallazos/PlantillaPelu.docx
 ${escritorio}   Versión escritorio (1280x800)
@@ -65,8 +65,12 @@ Get Title Screenshots and versions for URLs
 *** Keywords *** 
 Open URL and Get Info
     [Arguments]    ${url}
-    New Persistent Context    userDataDir=${COOKIES_DIR}   browser=chromium  headless=False  url=${url}
-    Wait For Elements State    xpath=//footer  visible
+    # New Persistent Context    userDataDir=${COOKIES_DIR}   browser=chromium  headless=False  url=${url}
+    New Browser    browser=chromium  headless=False
+    New Context    storageState=${COOKIES_DIR}${/}cookies.json
+    New Page    ${url}
+
+    Sleep  2
     # Click    xpath=//button[contains(text(), 'Aceptar')]
     ${status}=    Run Keyword And Return Status    Get Title
     ${page_title}=    Run Keyword If    ${status}==True    Get Title    ELSE    Set Variable    ${EMPTY}
@@ -80,9 +84,12 @@ Open URL and Get Info
 
 Take Different Version Screenshots
     [Arguments]    ${url}
-    New Persistent Context    userDataDir=${COOKIES_DIR}   browser=chromium  headless=False  url=${url}
+    # New Persistent Context    userDataDir=${COOKIES_DIR}   browser=chromium  headless=False  url=${url}
+    New Browser    browser=chromium  headless=False
+    New Context    storageState=${COOKIES_DIR}${/}cookies.json
+    New Page    ${url}
     
-    Wait For Elements State    xpath=//footer  visible
+    Sleep  2
     # Click    xpath=//button[contains(text(), 'Aceptar')]
     Set Viewport Size    375      667
     Sleep  3

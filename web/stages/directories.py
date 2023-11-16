@@ -315,7 +315,7 @@ def callback_robot(ret_val: int | None, result_path: str, kwargs_callbacks: dict
     
 
 
-def run_robot(kit_digital: KitDigital, info_file: str, results_path: str):
+async def run_robot(kit_digital: KitDigital, info_file: str, results_path: str):
     """
     Run robot that not PASS.
     """
@@ -347,7 +347,7 @@ def run_robot(kit_digital: KitDigital, info_file: str, results_path: str):
         f'ID_EXECUTION:"{id_execution}"'
     ]
 
-    ret_code = asyncio.run(robot_handler.run_robot(
+    ret_code = await robot_handler.run_robot(
         "directorios", 
         args, 
         "citaciones", 
@@ -357,7 +357,7 @@ def run_robot(kit_digital: KitDigital, info_file: str, results_path: str):
         msg_info=f"Subiendo páginas {' '.join(include_tags)}",
         include_tags=include_tags,
         pabot=True
-    ))
+    )
 
     return ret_code
 
@@ -369,6 +369,7 @@ def run_robot_get_provinces(kit_digital: KitDigital, provincia_short: str, resul
     id_execution = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
     args = [
         f'province_dondeestamos:"{provincia_short}"',
+        f'SCREENSHOT_DIR:"{results_path}"',
         f'RETURN_FILE:"{msg_csv}"',
         f'ID_EXECUTION:"{id_execution}"'
     ]
@@ -378,9 +379,8 @@ def run_robot_get_provinces(kit_digital: KitDigital, provincia_short: str, resul
         args, 
         "citaciones", 
         output_dir=results_path,
-        msg_info=f"Obteniendo localidades en {provincia_short}",
-        include_tags=['get_localidad'],
-        pabot=True
+        msg_info=f"Obteniendo localidades en {provincia_short}. Es posible que el directorio tenga tiempo de respuesta alto. Sé paciente.",
+        include_tags=['get_localidad']
     ))
 
     df = pd.read_csv(msg_csv)
@@ -434,13 +434,17 @@ def get_dondeestamos_localidad(kit_digital: KitDigital) -> tuple[KitDigital, str
     
     if not provinces:
         st.info("Para la página donde estamos, es necesario obtener la localidad del negocio. Para ello, se obtienen las provincias de la página y se obtienen las localidades de cada provincia.")
+        localidades_form_completed = False
         with st.form("Localidades"):
             province_short = st.text_input("Proporciona la provincia para obtener las localidades", value=province_short)
             if st.form_submit_button("Enviar"):
-                results_path = kit_digital.stages[StageType.DONDEESTAMOS].results_path
-                (kit_digital, provinces) = run_robot_get_provinces(kit_digital, province_short, results_path)
-                st.session_state.provinces = provinces
-                st.session_state.province_short = province_short
+                # Robot outside form because notify
+                localidades_form_completed = True
+        if localidades_form_completed:
+            results_path = kit_digital.stages[StageType.DONDEESTAMOS].results_path
+            (kit_digital, provinces) = run_robot_get_provinces(kit_digital, province_short, results_path)
+            st.session_state.provinces = provinces
+            st.session_state.province_short = province_short
     
     if not hasattr(st.session_state, "provinces") or not st.session_state.provinces:
         st.stop()
@@ -483,7 +487,7 @@ def directories(kit_digital: KitDigital) -> KitDigital:
             json.dump(directories_stage.info["company_data"], f, indent=4)
 
         # Run robot
-        run_robot(kit_digital, company_file, directories_stage.results_path)
+        asyncio.run(run_robot(kit_digital, company_file, directories_stage.results_path))
         
         # Mark Directories as PASS if all robots are PASS
         travel_pass = kit_digital.stages[StageType.TRAVELFUL].status == StageStatus.PASS
@@ -492,7 +496,7 @@ def directories(kit_digital: KitDigital) -> KitDigital:
 
         stage = kit_digital.stages[StageType.DIRECTORIES]
         if not (travel_pass and donde_pass and callup_pass):
-            st.warning('No se han subido correctamente los datos a los directorios.')
+            st.warning('No se han subido correctamente los datos a los directorios. Vuelve a intentarlo, si continua el error ponte en contacto con nosotros.')
             stage.status = StageStatus.FAIL
             stage.info["error"] = "Fallo robotframework."
             kit_digital.stages[StageType.DIRECTORIES] = stage

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import os
 from enum import Enum
 import yaml
@@ -78,6 +79,26 @@ class Stage:
         stage.info = data["info"]
         return stage
 
+@dataclass
+class ChromeServer:
+    id_: str
+    novnc_endpoint: str
+    playwright_endpoint: str
+
+    def to_dict(self):
+        return {
+            "id_": self.id_,
+            "novnc_endpoint": self.novnc_endpoint,
+            "playwright_endpoint": self.playwright_endpoint
+        }
+    
+    @classmethod
+    def from_dict(cls, data):
+        return cls(
+            id_ = data["id_"],
+            novnc_endpoint = data["novnc_endpoint"],
+            playwright_endpoint = data["playwright_endpoint"]
+        )
 
 class KitDigital:
     result_path_root: str = st.secrets.paths.result_kit
@@ -90,6 +111,7 @@ class KitDigital:
         self.cookies_dir: str = os.path.join(self.results_path, "cookies")
         self.info_file: str = os.path.join(self.results_path, "info_kit.yaml")
         self.word_file: str = os.path.join(self.results_path, "evidencias.docx")
+        self.chrome_server: ChromeServer | None = None
         self.stages: dict[StageType, Stage] = {
             StageType.ACCEPT_COOKIES: Stage("Aceptación De Cookies", os.path.join(self.results_path, "accept_cookies")),
             StageType.CRAWL_URLS: Stage("Obtención De Urls", os.path.join(self.results_path, "urls")),
@@ -131,6 +153,7 @@ class KitDigital:
             "results_path": self.results_path,
             "cookies_dir": self.cookies_dir,
             "word_file": self.word_file,
+            "chrome_server": self.chrome_server.to_dict() if self.chrome_server else None,
             "stages": {
                 stage_name.value: stage.to_dict() for stage_name, stage in self.stages.items()
             }
@@ -149,6 +172,8 @@ class KitDigital:
         kit_digital.results_path = data["results_path"]
         kit_digital.cookies_dir = data["cookies_dir"]
         kit_digital.word_file = data["word_file"]
+        if data["chrome_server"]:
+            kit_digital.chrome_server = ChromeServer.from_dict(data["chrome_server"])
         kit_digital.stages = {
             StageType(stage_name): Stage.from_dict(stage_data) for stage_name, stage_data in data["stages"].items()
         }

@@ -15,5 +15,6 @@ dependencies:
   - pip=22.1.2                  # https://pip.pypa.io/en/stable/news/
   - pip:
     - python-docx
+    - robotframework-pabot
       # Define pip packages here -> https://pypi.org/
-      # - robotframework-dist-butlerhat[browser_stealth] > Defined in post-install command with -e
+      # - robotframework-butlerhat[browser_stealth] > Defined in post-install command with -e

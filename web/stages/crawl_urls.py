@@ -85,7 +85,7 @@ def run_robot(kit_digital: KitDigital, results_path: str) -> int | None:
         output_dir=results_path,
         callbacks=[callback_crawl, notifications.callback_notify],
         kwargs_callbacks={"kit_digital": kit_digital},
-        msg_info=f"Obteniendo páginas de {kit_digital.url}"
+        msg_info=f"Obteniendo páginas de {kit_digital.url}. No cierre ni refresque la página, esto puede tardar de 1 a 2 minutos."
     ))
 
     return ret_code

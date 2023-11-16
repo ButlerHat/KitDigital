@@ -9,6 +9,8 @@ Variables     /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/T
 *** Variables ***
 ${CAPTCHA_API_KEY}  1b5b309b37e0231099f023aa9e96de0b
 ${WORD_FILE}    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/evidencias.docx
+${SCREENSHOT_DIR}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/directories
+
 # ${info_file}  /tmp/last_company_k2.json
 # ${email}  ventcal@bluepath.es
 # ${name}    Ventcal
@@ -56,10 +58,10 @@ callupcontact
     
     Go To  ${url}
     Run Keyword And Ignore Error  Wait Until Network Is Idle
-    Take Screenshot  fullPage=${True}  filename=${OUTPUT_DIR}${/}callupcontact.png
+    Take Screenshot  fullPage=${True}  filename=${SCREENSHOT_DIR}${/}callupcontact.png
     
-    Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Callupcontact    ${OUTPUT_DIR}${/}callupcontact.png
-    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},callupcontact,PASS,,URL:${url}|SCREENSHOT:${OUTPUT_DIR}${/}callupcontact.png${\n}
+    Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Callupcontact: ${url}    ${SCREENSHOT_DIR}${/}callupcontact.png
+    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},callupcontact,PASS,,URL:${url}|SCREENSHOT:${SCREENSHOT_DIR}${/}callupcontact.png${\n}
 
 
 *** Keywords ***

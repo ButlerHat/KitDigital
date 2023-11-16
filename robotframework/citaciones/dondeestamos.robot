@@ -9,10 +9,10 @@ Variables  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/Test
 
 *** Variables ***
 ${WORD_FILE}    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/evidencias.docx
-
+${SCREENSHOT_DIR}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/directories
 ${localidad_email}  jose.cartilagos@bluepath.es
 ${localidad_password}  pepe1234
-# ${province_dondeestamos}  Madrid
+${province_dondeestamos}  Madrid
 
 
 # ${info_file}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/directories/company.json
@@ -40,6 +40,8 @@ ${localidad_password}  pepe1234
 Get Localidad
     [Tags]  get_localidad
 
+    ${old_timeout}  Set Browser Timeout    60
+
     Browser.New Browser  chromium  headless=${False}
     Browser.New Context
     Browser.New Page  url=https://www.donde-estamos.es/alta-empresa
@@ -59,6 +61,8 @@ Get Localidad
 dondeestamos
     [Tags]  dondeestamos
     # ${username}  Evaluate  f'${username}{random.randint(0, 9)}{random.randint(0, 9)}{random.randint(0, 9)}{random.randint(0, 9)}'  modules=random
+
+    ${old_timeout}  Set Browser Timeout    60
 
     Browser.New Browser  chromium  headless=${False}
     Browser.New Context
@@ -111,10 +115,10 @@ dondeestamos
     
     Go To  ${url_result}
     Run Keyword And Ignore Error  Wait Until Network Is Idle
-    Take Screenshot  fullPage=${True}  filename=${OUTPUT_DIR}${/}dondeestamos.png
+    Take Screenshot  fullPage=${True}  filename=${SCREENSHOT_DIR}${/}dondeestamos.png
     
-    Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Donde estamos   ${OUTPUT_DIR}${/}dondeestamos.png
-    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},dondeestamos,PASS,,URL:${url_result}|SCREENSHOT:${OUTPUT_DIR}${/}dondeestamos.png${\n}
+    Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Donde estamos: ${url_result}   ${SCREENSHOT_DIR}${/}dondeestamos.png
+    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},dondeestamos,PASS,,URL:${url_result}|SCREENSHOT:${SCREENSHOT_DIR}${/}dondeestamos.png${\n}
 
 *** Keywords ***
 

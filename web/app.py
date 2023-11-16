@@ -1,5 +1,5 @@
 import streamlit as st
-import streamlit.components.v1 as components
+import utils.get_browser as get_browser
 import extra_streamlit_components as stx
 from stages.accept_cookies import accept_cookies
 from stages.directories import directories
@@ -44,7 +44,6 @@ def restart_stage(kit_d: KitDigital, stage_type: StageType, optional_stages: lis
             st.session_state[f'ask_{stage_type}'] = False
         elif no_button:
             st.session_state[f'ask_{stage_type}'] = False
-
 
     return kit_d
 
@@ -107,11 +106,13 @@ with st.sidebar:
     logo_path = st.secrets["paths"]["logo_path"]
     st.image(logo_path)
     st.write("Paipaya © 2023")
+    st.markdown("# Soluciones con inteligencia artificial")
+    st.markdown("Contacte con nosotros: d.correas.oliver@gmail.com")
 
-st.markdown("# Kit Digital")
+title_placeholder = st.empty()
+title_placeholder.markdown("# Kit Digital (Beta)")
 
 st.markdown("---")
-
 
 # Create Kit Digital
 created_kit_digital: KitDigital | None = None
@@ -119,6 +120,8 @@ created_kit_digital = get_create_kit_digital()
 
 assert created_kit_digital is not None, "No se ha podido crear el kit digital."
 kit_digital: KitDigital = created_kit_digital
+
+title_placeholder.markdown(f"# Kit Digital ({kit_digital.url})")
 
 val = stx.stepper_bar(steps=["Aceptar cookies", "Seleccionar Urls", "Subir Directorios", "Seo Básico", "Obtener H1, H2, H3", "Obtener el logo de Kit Digital", "Pantallazos Urls", "Pantallazos Multiidioma"])
 
@@ -129,22 +132,25 @@ if val == 0:
         display_title("Aceptar cookies", kit_digital.stages[StageType.ACCEPT_COOKIES].status)
     with col2:
         restart_stage(kit_digital, StageType.ACCEPT_COOKIES)
-    components.iframe("http://localhost:29388/", height=600)
     if kit_digital.stages[StageType.ACCEPT_COOKIES].status != StageStatus.PASS:
         kit_digital = accept_cookies(kit_digital)
+        if kit_digital.stages[StageType.ACCEPT_COOKIES].status == StageStatus.PASS:
+            st.rerun()
     
     # Show cookies
     if kit_digital.stages[StageType.ACCEPT_COOKIES].status == StageStatus.PASS:
-        st.write("Se han aceptado las cookies")
+        st.markdown("### Se han aceptado las cookies por un usuario.")
 
 if val == 1:
     col1, col2 = st.columns([4, 1])
     with col1:
-        display_title("Obtener urls", kit_digital.stages[StageType.CRAWL_URLS].status)
+        display_title("Obtener urls y seleccionar las válidas", kit_digital.stages[StageType.SELECT_URLS].status)
     with col2:
         restart_stage(kit_digital, StageType.CRAWL_URLS, optional_stages=[StageType.SELECT_URLS])
     if kit_digital.stages[StageType.CRAWL_URLS].status != StageStatus.PASS:
         kit_digital = crawl_urls(kit_digital)
+        if kit_digital.stages[StageType.CRAWL_URLS].status == StageStatus.PASS:
+            st.rerun()
 
     # Show suggested urls
     if kit_digital.stages[StageType.CRAWL_URLS].status == StageStatus.PASS:
@@ -155,6 +161,8 @@ if val == 1:
     st.markdown("## Seleccion de urls")
     if kit_digital.stages[StageType.SELECT_URLS].status != StageStatus.PASS:
         kit_digital = select_urls(kit_digital)
+        if kit_digital.stages[StageType.SELECT_URLS].status == StageStatus.PASS:
+            st.rerun()
 
     # Show urls
     if kit_digital.stages[StageType.SELECT_URLS].status == StageStatus.PASS:
@@ -165,11 +173,11 @@ if val == 2:
     col1, col2 = st.columns([4, 1])
     with col1:
         display_title("Subir directorios", kit_digital.stages[StageType.DIRECTORIES].status)
-    with col2:
-        restart_stage(kit_digital, StageType.DIRECTORIES, optional_stages=[StageType.CALLUPCONTACT, StageType.DONDEESTAMOS, StageType.TRAVELFUL])
     # Directories
     if kit_digital.stages[StageType.DIRECTORIES].status != StageStatus.PASS:
         kit_digital = directories(kit_digital)
+        if kit_digital.stages[StageType.DIRECTORIES].status == StageStatus.PASS:
+            st.rerun()
 
     # Show directories
     if kit_digital.stages[StageType.DIRECTORIES].status == StageStatus.PASS:
@@ -194,6 +202,8 @@ if val == 3:
         restart_stage(kit_digital, StageType.SEO_BASICO)
     if kit_digital.stages[StageType.SEO_BASICO].status != StageStatus.PASS:
         kit_digital = set_seo_basico(kit_digital)
+        if kit_digital.stages[StageType.SEO_BASICO].status == StageStatus.PASS:
+            st.rerun()
 
     # Show SEO Basico
     if kit_digital.stages[StageType.SEO_BASICO].status == StageStatus.PASS:
@@ -208,6 +218,8 @@ if val == 4:
         display_title("Obtener H1, H2, H3", kit_digital.stages[StageType.HEADERS_SEO].status)
     if kit_digital.stages[StageType.HEADERS_SEO].status != StageStatus.PASS:
         get_headers(kit_digital)
+        if kit_digital.stages[StageType.HEADERS_SEO].status == StageStatus.PASS:
+            st.rerun()
 
     # Show Headers SEO
     if kit_digital.stages[StageType.HEADERS_SEO].status == StageStatus.PASS:
@@ -228,6 +240,8 @@ if val == 5:
 
     if kit_digital.stages[StageType.LOGO_KIT_DIGITAL].status != StageStatus.PASS:
         get_logo_kit(kit_digital)
+        if kit_digital.stages[StageType.LOGO_KIT_DIGITAL].status == StageStatus.PASS:
+            st.rerun()
 
     # Show Acreditacion cumplimiento en materia de publicidad
     if kit_digital.stages[StageType.LOGO_KIT_DIGITAL].status == StageStatus.PASS:
@@ -250,6 +264,8 @@ if val == 6:
 
     if kit_digital.stages[StageType.PANTALLAZOS_URLS].status != StageStatus.PASS:
         get_pantallazos_urls(kit_digital)
+        if kit_digital.stages[StageType.PANTALLAZOS_URLS].status == StageStatus.PASS:
+            st.rerun()
 
     # Show Plantilla de recopilacion de evidencias
     if kit_digital.stages[StageType.PANTALLAZOS_URLS].status == StageStatus.PASS:
@@ -270,9 +286,10 @@ if val == 7:
     with col2:
         restart_stage(kit_digital, StageType.PANTALLAZOS_MULTIIDIOMA)
     
-    components.iframe("http://localhost:29388/", height=600)
     if kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status != StageStatus.PASS:
         get_pantallazos_multiidioma(kit_digital)
+        if kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status == StageStatus.PASS:
+            st.rerun()
 
     # Show Plantilla de recopilacion de evidencias multi-idioma
     if kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status == StageStatus.PASS:
@@ -284,6 +301,11 @@ if val == 7:
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 key="pantallazos_multiidioma"
             )
+
+# If all stages pass, delete browser
+if all([x.status == StageStatus.PASS for x in kit_digital.stages.values()]):
+    kit_digital = get_browser.delete_browser_after_stage(kit_digital)
+    kit_digital.to_yaml()
 
 
 

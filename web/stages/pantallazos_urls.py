@@ -65,7 +65,7 @@ def callback_pantallazos(ret_val: int | None, result_path: str, kwargs_callbacks
         kit_digital.to_yaml()
 
 
-def run_robot(kit_digital: KitDigital):
+async def run_robot(kit_digital: KitDigital):
     """
     Get <h> labels from html.
     """
@@ -87,7 +87,7 @@ def run_robot(kit_digital: KitDigital):
         *[f'url{i}:"{url}"' for i, url in enumerate(urls, start=1)]
     ]
 
-    asyncio.run(robot_handler.run_robot(
+    await robot_handler.run_robot(
         "pantallazos_urls", 
         args, 
         "KitD_Pantallazos/KitD_PantallazosUrls.robot", 
@@ -95,7 +95,7 @@ def run_robot(kit_digital: KitDigital):
         callbacks=[callback_pantallazos, notifications.callback_notify],
         kwargs_callbacks={"kit_digital": kit_digital},
         msg_info=f"Obteniendo el pantallazo del logo del kit digital {kit_digital.url}"
-    ))
+    )
 
 
 def get_pantallazos_urls(kit_digital: KitDigital) -> KitDigital:
@@ -103,7 +103,7 @@ def get_pantallazos_urls(kit_digital: KitDigital) -> KitDigital:
     kit_digital.stages[StageType.PANTALLAZOS_URLS].status = StageStatus.PROGRESS
     kit_digital.to_yaml()
     
-    run_robot(kit_digital)  # Here store kit digital to yaml
+    asyncio.run(run_robot(kit_digital))  # Here store kit digital to yaml
 
     # Refresh kit digital
     kit_d = KitDigital.get_kit_digital(kit_digital.url)

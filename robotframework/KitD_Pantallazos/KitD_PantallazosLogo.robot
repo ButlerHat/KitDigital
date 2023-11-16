@@ -25,7 +25,7 @@ ${url}    https://djadelpeluqueria.es/
 
 ${RETURN_FILE}  ${OUTPUT_DIR}${/}msg.csv
 ${ID_EXECUTION}  0
-${COOKIES_DIR}   /tmp/djadelpeluqueria
+# ${COOKIES_DIR}   /tmp/djadelpeluqueria
 ${WORD_FILE}    ${OUTPUT_DIR}${/}example1.docx
 ${LOGO_SCREENSHOT}  ${OUTPUT_DIR}${/}logo.png
 ${escritorio}   Versión escritorio
@@ -41,11 +41,18 @@ Get Title Screenshots and versions for URLs
 *** Keywords *** 
 Open URL and Get Info
     [Arguments]    ${url}
-    New Persistent Context    userDataDir=${COOKIES_DIR}   browser=chromium  headless=False  url=${url}
-    Wait For Elements State    xpath=//footer  visible
+    # New Persistent Context    userDataDir=${COOKIES_DIR}   browser=chromium  headless=False  url=${url}
+    New Browser    browser=chromium  headless=False
+    New Context    storageState=${COOKIES_DIR}${/}cookies.json
+    New Page    ${url}
+
+    ${STATUS}  ${MSG}  Run Keyword And Ignore error  Wait For Elements State    xpath=//footer  visible  timeout=5s
     Sleep  2
-    Scroll TO Element  //footer
-    Sleep  2
+    IF  '${STATUS}'=='PASS'  
+        Scroll TO Element  //footer
+    ELSE
+        Scroll By  vertical=100%
+    END
     Take Screenshot  filename=${LOGO_SCREENSHOT}
     Append Text And Picture To Document    ${WORD_FILE}  ${EMPTY}   ${EMPTY}    ${LOGO_SCREENSHOT}
 

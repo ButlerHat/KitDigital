@@ -6,9 +6,9 @@ import pandas as pd
 import numpy as np
 import utils.robot_handler as robot_handler
 import utils.notifications as notifications
+import utils.get_browser as get_browser
 from kitdigital import KitDigital, StageStatus, StageType
 from utils.notifications import send_contact_to_ntfy
-
 
 
 def callback_cookies(ret_val: int | None, result_path: str, kwargs_callbacks: dict, run_robot_kwargs: dict):  # pylint: disable=unused-argument
@@ -63,7 +63,7 @@ def callback_cookies(ret_val: int | None, result_path: str, kwargs_callbacks: di
         kit_digital.to_yaml()
 
 
-def run_robot(kit_digital: KitDigital):
+async def run_robot(kit_digital: KitDigital):
     """
     Get <h> labels from html.
     """
@@ -72,22 +72,45 @@ def run_robot(kit_digital: KitDigital):
     robot_handler.create_csv(msg_csv)
     id_execution = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
     
+    if not kit_digital.chrome_server:
+        raise Exception("No se ha podido crear el navegador. No hay id_ o novnc_endpoint en la respuesta.")
+
     args = [
+        f'WSENDPOINT:"{kit_digital.chrome_server.playwright_endpoint}"',
         f'COOKIES_DIR:"{kit_digital.cookies_dir}"',
         f'URL:"{kit_digital.url}"',
         f'RETURN_FILE:"{msg_csv}"',
         f'ID_EXECUTION:"{id_execution}"',
     ]
 
-    asyncio.run(robot_handler.run_robot(
-        "accept_cookies", 
-        args, 
-        "KitD_Cookies.robot", 
-        output_dir=results_path,
-        callbacks=[callback_cookies, notifications.callback_notify],
-        kwargs_callbacks={"kit_digital": kit_digital},
-        msg_info=f"Acepta las cookies en la página: {kit_digital.url}"
-    ))
+    if "executing_cookies" not in st.session_state or not st.session_state["executing_cookies"]:
+        await robot_handler.run_robot(
+            "accept_cookies", 
+            args, 
+            "KitD_Cookies.robot", 
+            output_dir=results_path,
+            callbacks=[notifications.callback_notify],
+            kwargs_callbacks={"kit_digital": kit_digital},
+            msg_info=f"Acepta las cookies en la página: {kit_digital.url}",
+            include_tags=["1"]
+        )
+        st.session_state["executing_cookies"] = True
+
+
+    # Put a button and wait for it to be clicked.
+    st.markdown("## Acepta las cookies en la página")
+    if st.button("Guardar cookies"):
+        await robot_handler.run_robot(
+            "accept_cookies", 
+            args, 
+            "KitD_Cookies.robot", 
+            output_dir=results_path,
+            callbacks=[callback_cookies, notifications.callback_notify],
+            kwargs_callbacks={"kit_digital": kit_digital},
+            msg_info=f"Aceptando las cookies: {kit_digital.url}",
+            include_tags=["2"]
+        )
+        st.session_state["executing_cookies"] = False
 
 
 def accept_cookies(kit_digital: KitDigital) -> KitDigital:
@@ -95,7 +118,9 @@ def accept_cookies(kit_digital: KitDigital) -> KitDigital:
     kit_digital.stages[StageType.ACCEPT_COOKIES].status = StageStatus.PROGRESS
     kit_digital.to_yaml()
     
-    run_robot(kit_digital)  # Here store kit digital to yaml
+    # Request docker chrome
+    kit_digital = get_browser.get_and_show_browser(kit_digital, StageType.ACCEPT_COOKIES)
+    asyncio.run(run_robot(kit_digital))  # Here store kit digital to yaml
 
     # Refresh kit digital
     kit_d = KitDigital.get_kit_digital(kit_digital.url)

@@ -20,10 +20,13 @@ services:
     cap_add:
       - SYS_ADMIN
     shm_size: '2gb'
-    networks:
-      - external
+    network_mode: host  # To communicate with minikube
+    # networks:
+    #   - external
     command: /bin/sh -c "while sleep 1000; do :; done"
 
-networks:
-  external:
-    name: net_robot
+# networks:
+  # external:
+  #   name: net_robot
+  # host:
+  #   external: true

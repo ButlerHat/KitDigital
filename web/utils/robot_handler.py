@@ -4,9 +4,11 @@ import streamlit as st
 from typing import Callable
 
 
-def get_robot_command(id_, vars_, robot, tests: list | None =None, output_dir=None):
+def get_robot_command(id_, vars_, robot, tests: list | None =None, include_tags: list | None =None, output_dir=None):
     if tests is None:
         tests = []
+    if include_tags is None:
+        include_tags = []
     
     robot_path = st.secrets.paths.robot
     robot_script = os.path.join(robot_path, robot)
@@ -15,6 +17,7 @@ def get_robot_command(id_, vars_, robot, tests: list | None =None, output_dir=No
         f'-d "{result_path}" ' + \
         f'-v OUTPUT_DIR:"{result_path}" {"-v " if len(vars_) > 0 else ""}{" -v ".join(vars_)} ' + \
         f'{"-t " if len(tests) > 0 else ""}{" -t ".join(tests)} ' + \
+        f'{"-i " if len(include_tags) > 0 else ""}{" -i ".join(include_tags)} ' + \
         f"{robot_script}"
     return robot_command
 
@@ -92,9 +95,9 @@ async def run_robot(
         os.makedirs(result_path)
 
     if pabot:
-        robot_command = get_pabot_command(id_, vars_, robot, include_tags, output_dir=output_dir)
+        robot_command = get_pabot_command(id_, vars_, robot, include_tags=include_tags, output_dir=output_dir)
     else:
-        robot_command = get_robot_command(id_, vars_, robot, output_dir=output_dir)
+        robot_command = get_robot_command(id_, vars_, robot, include_tags=include_tags, output_dir=output_dir)
 
     # Move to robot directory
     print(f"Running {robot_command} \n")

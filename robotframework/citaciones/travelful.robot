@@ -8,6 +8,7 @@ Variables      /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/
 
 *** Variables ***
 ${WORD_FILE}    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/evidencias.docx
+${SCREENSHOT_DIR}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/directories
 
 # ${info_file}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/directories/company.json
 # ${RETURN_FILE}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/travelful/msg.csv
@@ -62,10 +63,10 @@ travelful
     
     Go To  ${url}
     Run Keyword And Ignore Error  Wait Until Network Is Idle
-    Take Screenshot  fullPage=${True}  filename=${OUTPUT_DIR}${/}travelful.png
+    Take Screenshot  fullPage=${True}  filename=${SCREENSHOT_DIR}${/}travelful.png
     
-    Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Travelful    ${OUTPUT_DIR}${/}travelful.png
-    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},travelful,PASS,,URL:${url}|SCREENSHOT:${OUTPUT_DIR}${/}travelful.png${\n}
+    Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Travelful: ${url}    ${SCREENSHOT_DIR}${/}travelful.png
+    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},travelful,PASS,,URL:${url}|SCREENSHOT:${SCREENSHOT_DIR}${/}travelful.png${\n}
 
 
 *** Keywords ***

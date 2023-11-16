@@ -68,7 +68,7 @@ def callback_headers(ret_val: int | None, result_path: str, kwargs_callbacks: di
         kit_digital.to_yaml()
 
 
-def run_robot(kit_digital: KitDigital):
+async def run_robot(kit_digital: KitDigital):
     """
     Get <h> labels from html.
     """
@@ -88,7 +88,7 @@ def run_robot(kit_digital: KitDigital):
         f'ID_EXECUTION:"{id_execution}"'
     ]
 
-    asyncio.run(robot_handler.run_robot(
+    await robot_handler.run_robot(
         "logo_kit_digital", 
         args, 
         "KitD_Pantallazos/KitD_PantallazosLogo.robot", 
@@ -96,7 +96,7 @@ def run_robot(kit_digital: KitDigital):
         callbacks=[callback_headers, notifications.callback_notify],
         kwargs_callbacks={"kit_digital": kit_digital},
         msg_info=f"Obteniendo el pantallazo del logo del kit digital {kit_digital.url}"
-    ))
+    )
 
 
 def get_logo_kit(kit_digital: KitDigital) -> KitDigital:
@@ -104,7 +104,7 @@ def get_logo_kit(kit_digital: KitDigital) -> KitDigital:
     kit_digital.stages[StageType.LOGO_KIT_DIGITAL].status = StageStatus.PROGRESS
     kit_digital.to_yaml()
     
-    run_robot(kit_digital)  # Here store kit digital to yaml
+    asyncio.run(run_robot(kit_digital))  # Here store kit digital to yaml
 
     # Refresh kit digital
     kit_d = KitDigital.get_kit_digital(kit_digital.url)
