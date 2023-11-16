@@ -42,7 +42,7 @@ Get Localidad
 
     ${old_timeout}  Set Browser Timeout    60
 
-    Browser.New Browser  chromium  headless=${False}
+    Browser.New Browser  chromium  headless=${True}
     Browser.New Context
     Browser.New Page  url=https://www.donde-estamos.es/alta-empresa
 
@@ -64,7 +64,7 @@ dondeestamos
 
     ${old_timeout}  Set Browser Timeout    60
 
-    Browser.New Browser  chromium  headless=${False}
+    Browser.New Browser  chromium  headless=${True}
     Browser.New Context
     Browser.New Page  url=https://www.donde-estamos.es/alta-empresa
 

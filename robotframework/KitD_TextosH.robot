@@ -12,7 +12,7 @@ ${ID_EXECUTION}  0
 *** Test Cases ***
 Obtener Textos de Encabezados
     [Setup]   Crear Archivo si no existe
-    Open Browser    ${url}    browser=chromium
+    Open Browser    ${url}    browser=chromium  headless=${True}
     wait until network is idle
     ${h1_elements}=    Get Elements    xpath=//h1
     ${h2_elements}=    Get Elements    xpath=//h2

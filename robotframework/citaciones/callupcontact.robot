@@ -33,7 +33,7 @@ ${country}  Spain  # English
 callupcontact
     [Tags]  callupcontact
     
-    Browser.New Browser  chromium  headless=${False}
+    Browser.New Browser  chromium  headless=${True}
     Browser.New Context
     Browser.New Page  url=https://www.callupcontact.com/active/register/register.php?
 

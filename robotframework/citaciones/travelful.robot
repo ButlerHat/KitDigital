@@ -30,7 +30,7 @@ travelful
     # ${username}  Evaluate  f'${username}{random.randint(0, 9)}{random.randint(0, 9)}{random.randint(0, 9)}{random.randint(0, 9)}'  modules=random
 
     # Browser.New Stealth Persistent Context  userDataDir=/tmp/travelful  browser=chromium  headless=${False}  url=http://www.travelful.net/register.asp
-    New Browser  chromium  headless=${False} 
+    New Browser  chromium  headless=${True} 
     New Context    
     New Page  http://www.travelful.net/register.asp
     

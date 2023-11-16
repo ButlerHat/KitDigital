@@ -66,7 +66,7 @@ Get Title Screenshots and versions for URLs
 Open URL and Get Info
     [Arguments]    ${url}
     # New Persistent Context    userDataDir=${COOKIES_DIR}   browser=chromium  headless=False  url=${url}
-    New Browser    browser=chromium  headless=False
+    New Browser    browser=chromium  headless=${True}
     New Context    storageState=${COOKIES_DIR}${/}cookies.json
     New Page    ${url}
 
@@ -85,7 +85,7 @@ Open URL and Get Info
 Take Different Version Screenshots
     [Arguments]    ${url}
     # New Persistent Context    userDataDir=${COOKIES_DIR}   browser=chromium  headless=False  url=${url}
-    New Browser    browser=chromium  headless=False
+    New Browser    browser=chromium  headless=${True}
     New Context    storageState=${COOKIES_DIR}${/}cookies.json
     New Page    ${url}
     
