@@ -1,6 +1,6 @@
 version: '3.7'
 services:
-  ciclozero_prod:
+  kitdigital_prod:
     build:
       image: butlerhat/kitdigital-prod
       context: ../..
