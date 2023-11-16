@@ -1,10 +1,10 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/miniconda
 {
-	"name": "Ciclozero (Miniconda)",
-	"dockerComposeFile": "./docker-compose-build.yml",
-	"service": "ciclozero_prod",
-	"workspaceFolder": "/workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/CicloZero",
+	"name": "KitDigital Prod",
+	"dockerComposeFile": "./prod/docker-compose-build.yml",
+	"service": "kitdigital_prod",
+	"workspaceFolder": "/workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/.devcontainer",
 
 	"features": {
 		"ghcr.io/devcontainers/features/desktop-lite:1": {}
@@ -17,7 +17,7 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "source /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/CicloZero/.devcontainer/prod/postCreateCommand.sh"
+	"postCreateCommand": "bash /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/.devcontainer/prod/postCreateCommand.sh"
 
 	// Configure tool-specific properties.
 	// "customizations": {},

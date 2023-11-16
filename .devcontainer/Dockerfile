@@ -49,7 +49,6 @@ RUN umask 0002 && conda env create -n robotframework -f ./robotframework-conda.y
 # Set conda env as default
 RUN echo "source activate robotframework" >> ~/.bashrc  
 
-
 RUN rm -rf web-conda.yaml robotframework-conda.yaml
 
 
@@ -61,16 +60,15 @@ USER root
 # Install robotframework env
 ENV PIP_EXTRA_INDEX_URL=https://$PYPI_USER:$PYPI_PASS@pypiserver.paipaya.com/
 
+# Install robot libraries
+RUN /opt/conda/condabin/conda run -n robotframework pip install robotframework-butlerhat[browser_stealth]
+
 # Copy project files
 COPY . /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital
 WORKDIR /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital
 
 # This is needed to avoid permissions errors when clonning with actions
 RUN chown -R $UNAME:$UNAME /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital
-
-USER $UNAME
-COPY robot-conda-prod.yaml ./robotframework/conda.yaml
-RUN conda env update -n robotframework -f ./robotframework/conda.yaml --prune
 
 USER root
 RUN chmod -R a+rw /opt/conda/envs/robotframework/lib/python3.10/site-packages/Browser
@@ -81,5 +79,5 @@ USER $UNAME
 ENV PATH=/opt/conda/envs/robotframework/bin:$PATH
 RUN /opt/conda/envs/robotframework/bin/python -m Browser.entry init
 
-CMD ["source", "./.devcontainer/postCreateCommand.sh"]
+CMD ["source", "./.devcontainer/prod/postCreateCommand.sh"]
 

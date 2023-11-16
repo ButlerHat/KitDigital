@@ -1,0 +1,45 @@
+name: Build and deploy interpreter app
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch: # manual trigger
+
+jobs:
+  build:
+    runs-on: omen-ubuntu
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Set prod devcontainer
+      run: |
+        cp .devcontainer/prod/devcontainer.json .devcontainer/
+        
+        echo 'USER_ID=1000' >> .devcontainer/.env
+        echo 'GROUP_ID=1000' >> .devcontainer/.env
+        echo 'PYPI_USER='"'"'${{ secrets.PYPI_USER }}'"'"'' >> .devcontainer/prod/.env
+        echo 'PYPI_PASS='"'"'${{ secrets.PYPI_PASS }}'"'"'' >> .devcontainer/prod/.env
+
+
+
+    - name: Log in to Docker registry
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Pre-build image
+      uses: devcontainers/ci@v0.3
+      with:
+        imageName: butlerhat/kitdigital-prod
+        cacheFrom: butlerhat/kitdigital-prod
+        push: always
+
+    - name: Apply Kubernetes Manifests
+      run: |
+        kubectl apply -f .devcontainer/prod/kitdigital_deployment.yaml
+
+    - name: Check Deployment Status
+      run: |
+        kubectl delete pod -l app=kitdigital-prod
+        kubectl rollout status deployment/kitdigital-prod
