@@ -1,8 +1,8 @@
 version: '3.7'
 services:
   kitdigital_prod:
+    image: butlerhat/kitdigital-prod
     build:
-      image: butlerhat/kitdigital-prod
       context: ../..
       # Dockerfile is relative to context
       dockerfile: .devcontainer/Dockerfile
