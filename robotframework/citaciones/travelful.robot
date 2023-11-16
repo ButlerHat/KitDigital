@@ -29,7 +29,11 @@ travelful
     [Tags]  travelful
     # ${username}  Evaluate  f'${username}{random.randint(0, 9)}{random.randint(0, 9)}{random.randint(0, 9)}{random.randint(0, 9)}'  modules=random
 
-    Browser.New Stealth Persistent Context  userDataDir=/tmp/travelful  browser=chromium  headless=${False}  url=http://www.travelful.net/register.asp
+    # Browser.New Stealth Persistent Context  userDataDir=/tmp/travelful  browser=chromium  headless=${False}  url=http://www.travelful.net/register.asp
+    New Browser  chromium  headless=${False} 
+    New Context    
+    New Page  http://www.travelful.net/register.asp
+    
     Write ${username} at Nombre
     Write ${email} at Email
     Write ${password} at Password

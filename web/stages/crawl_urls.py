@@ -73,9 +73,10 @@ def run_robot(kit_digital: KitDigital, results_path: str) -> int | None:
     id_execution = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
     
     args = [
-        f'URL:"{kit_digital.url}"',
+        f'URL:"{kit_digital.stages[StageType.CRAWL_URLS].info["url_crawl"]}"',
         f'RETURN_FILE:"{msg_csv}"',
-        f'ID_EXECUTION:"{id_execution}"'
+        f'ID_EXECUTION:"{id_execution}"',
+        f'FILTER_ENDING:"{kit_digital.stages[StageType.CRAWL_URLS].info["filter_ending"]}"'
     ]
 
     ret_code = asyncio.run(robot_handler.run_robot(
@@ -85,7 +86,7 @@ def run_robot(kit_digital: KitDigital, results_path: str) -> int | None:
         output_dir=results_path,
         callbacks=[callback_crawl, notifications.callback_notify],
         kwargs_callbacks={"kit_digital": kit_digital},
-        msg_info=f"Obteniendo páginas de {kit_digital.url}. No cierre ni refresque la página, esto puede tardar de 1 a 2 minutos."
+        msg_info=f"Obteniendo páginas de {kit_digital.stages[StageType.CRAWL_URLS].info['url_crawl']}. No cierre ni refresque la página, esto puede tardar de 1 a 2 minutos."
     ))
 
     return ret_code
@@ -97,8 +98,21 @@ def crawl_urls(kit_digital: KitDigital) -> KitDigital:
     urls_stage.status = StageStatus.PROGRESS
     kit_digital.stages[StageType.CRAWL_URLS] = urls_stage
     kit_digital.to_yaml()
+
+    kit_digital.stages[StageType.CRAWL_URLS].info["url_crawl"] = kit_digital.url
+    kit_digital.stages[StageType.CRAWL_URLS].info["filter_ending"] = True
+    url_selected = False
+    with st.form("Url a parti de donde buscar"):
+        url: str = st.text_input("Url a parti de donde buscar", value=kit_digital.url)
+        filter_ending: bool = st.checkbox("Filtrar por extensión", value=True)
+        if st.form_submit_button("Enviar"):
+            kit_digital.stages[StageType.CRAWL_URLS].info["url_crawl"] = url
+            kit_digital.stages[StageType.CRAWL_URLS].info["filter_ending"] = filter_ending
+            kit_digital.to_yaml()
+            url_selected = True
     
-    run_robot(kit_digital, urls_stage.results_path)  # Here store kit digital to yaml
+    if url_selected:
+        run_robot(kit_digital, urls_stage.results_path)  # Here store kit digital to yaml
 
     # Refresh kit digital
     kit_d: KitDigital | None = KitDigital.get_kit_digital(kit_digital.url)

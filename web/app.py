@@ -59,6 +59,7 @@ def get_create_kit_digital() -> KitDigital:
     
     kit_d = None
     with st.form("Obtener urls"):
+        st.info("La url debe ser la página principal del dominio. Desde esta se navegaran a las demás páginas y se obtendran cabeceras, etc.")
         st.write("Proporciona la url del dominio")
         url = st.text_input("URL")
 
@@ -121,7 +122,7 @@ created_kit_digital = get_create_kit_digital()
 assert created_kit_digital is not None, "No se ha podido crear el kit digital."
 kit_digital: KitDigital = created_kit_digital
 
-title_placeholder.markdown(f"# Kit Digital ({kit_digital.url})")
+title_placeholder.markdown(f"# Kit Digital (Beta) ({kit_digital.url})")
 
 val = stx.stepper_bar(steps=["Aceptar cookies", "Seleccionar Urls", "Subir Directorios", "Seo Básico", "Obtener H1, H2, H3", "Obtener el logo de Kit Digital", "Pantallazos Urls", "Pantallazos Multiidioma"])
 

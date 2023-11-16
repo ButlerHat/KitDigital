@@ -137,7 +137,7 @@ class KitDigital:
     
     @staticmethod
     def _get_id(url: str) -> str:
-        return url.replace("https://", "").replace("http://", "").replace("/", "")
+        return url.replace("https://", "").replace("http://", "").replace("/", "").replace("#", "").replace("?", "").replace(".", "").replace(":", "").replace("-", "").replace("_", "").replace("=", "").replace("&", "").replace("%", "").replace("+", "").replace(";", "").replace(",", "").replace("!", "").replace("(", "").replace(")", "").replace("[", "").replace("]", "").replace("{", "").replace("}", "").replace("|", "").replace("\\", "").replace("'", "").replace('"', "").replace(" ", "")
 
     def set_results_path(self, results_path):
         self.results_path = results_path

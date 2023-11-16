@@ -99,7 +99,9 @@ async def run_robot(kit_digital: KitDigital):
 
     # Put a button and wait for it to be clicked.
     st.markdown("## Acepta las cookies en la página")
-    if st.button("Guardar cookies"):
+    placeholder = st.empty()
+    if placeholder.button("Guardar cookies"):
+        placeholder.empty()
         await robot_handler.run_robot(
             "accept_cookies", 
             args, 

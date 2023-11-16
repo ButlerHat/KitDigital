@@ -22,7 +22,7 @@ Aceptar Cookies
         # Para el kit digital se usara el navegador completo
         TRY
             Connect To Browser Over Cdp    ${WSENDPOINT}
-            New Page  ${URL}
+            Go To  ${URL}
         EXCEPT
             Connect To Browser    ${WSENDPOINT}
             New Context  viewport=${None}

@@ -4,10 +4,11 @@ Library    OperatingSystem
 
 
 *** Variables ***
-${URL}    https://djadelpeluqueria.es/
+${URL}    https://panaderiajesus.com/#/es
 ${RETURN_FILE}  ${OUTPUT_DIR}${/}msg.csv
 ${MAX_DEPTH}  1
 ${ID_EXECUTION}  0
+${FILTER_ENDING}  ${True}
 
 
 *** Test Cases ***
@@ -20,9 +21,8 @@ Obtener URLs de la Página Principal
 Miaccion
     ${url}=       Get Url
     ${is_file}  Evaluate  bool("${url.split("/")[-1]}")
-    IF  ${is_file}  RETURN  
+    IF  ${is_file} and ${FILTER_ENDING}  RETURN  
     Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},KitD_Paginas,PASS,,${url}${\n}
-
 
 Crear Archivo si no existe
     ${is_file}  Evaluate  bool(os.path.isfile("${RETURN_FILE}"))  modules=os
