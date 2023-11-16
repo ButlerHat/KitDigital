@@ -79,5 +79,5 @@ USER $UNAME
 ENV PATH=/opt/conda/envs/robotframework/bin:$PATH
 RUN /opt/conda/envs/robotframework/bin/python -m Browser.entry init
 
-CMD ["source", "./.devcontainer/prod/postCreateCommand.sh"]
+CMD ["bash", "./.devcontainer/prod/postCreateCommand.sh"]
 
