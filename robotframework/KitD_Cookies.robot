@@ -35,7 +35,7 @@ Aceptar Cookies
         New Page  ${URL}
     END
     
-    Record Click
+    # Record Click
 
 
 StoreCookies

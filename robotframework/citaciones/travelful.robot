@@ -43,13 +43,13 @@ travelful
             Go To  ${URL}
         EXCEPT
             Connect To Browser    ${WSENDPOINT}
-            New Context  viewport=${None}
+            New Context
             New Page  ${URL}
         END
     ELSE
         # Para Dev
         New Browser  chromium  headless=${False}
-        New Context  viewport=${None}
+        New Context
         New Page  ${URL}
     END
     

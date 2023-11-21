@@ -54,13 +54,13 @@ Get Localidad
             Go To  ${URL}
         EXCEPT
             Connect To Browser    ${WSENDPOINT}
-            New Context  viewport=${None}
+            New Context
             New Page  ${URL}
         END
     ELSE
         # Para Dev
         New Browser  chromium  headless=${False}
-        New Context  viewport=${None}
+        New Context
         New Page  ${URL}
     END
 
@@ -91,13 +91,13 @@ dondeestamos
             Go To  ${URL}
         EXCEPT
             Connect To Browser    ${WSENDPOINT}
-            New Context  viewport=${None}
+            New Context
             New Page  ${URL}
         END
     ELSE
         # Para Dev
         New Browser  chromium  headless=${False}
-        New Context  viewport=${None}
+        New Context
         New Page  ${URL}
     END
 
@@ -148,7 +148,10 @@ dondeestamos
     
     Go To  ${url_result}
     Run Keyword And Ignore Error  Wait Until Network Is Idle
-    Run Keyword And Ignore Error  Scroll To Element    //*h4*[contains(text(),'${company_name}')]
+    ${old_timeout}  Set Browser Timeout    1
+    Run Keyword And Ignore Error  Scroll To Element    //h4[contains(text(),'${company_name}')]`
+    Set Browser Timeout    ${old_timeout}
+
     Take Screenshot  filename=${SCREENSHOT_DIR}${/}dondeestamos.png
     
     Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Donde estamos: ${url_result}   ${SCREENSHOT_DIR}${/}dondeestamos.png

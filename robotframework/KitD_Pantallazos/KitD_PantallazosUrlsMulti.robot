@@ -57,7 +57,7 @@ Open URL and Get Info
     END
 
     # Record one click and leave the page open
-    Record Click
+    # Record Click
 
 
 Store URL
