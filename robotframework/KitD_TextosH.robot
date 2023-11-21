@@ -41,19 +41,19 @@ Obtener Textos de Encabezados
         Scroll To Element    ${element}
         Sleep  1
         ${text}=    Get Text    ${element}
-        Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},KitD_TextosH,PASS,,H1 - ${text}${\n}
+        Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},KitD_TextosH,PASS,,"H1 - ${text}"${\n}
     END
     FOR    ${element}    IN    @{h2_elements}
         Scroll To Element    ${element}
         Sleep  1
         ${text}=    Get Text    ${element}
-        Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},KitD_TextosH,PASS,,H2 - ${text}${\n}
+        Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},KitD_TextosH,PASS,,"H2 - ${text}"${\n}
     END
     FOR    ${element}    IN    @{h3_elements}
         Scroll To Element    ${element}
         Sleep  1
         ${text}=    Get Text    ${element}
-        Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},KitD_TextosH,PASS,,H3 - ${text}${\n}
+        Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},KitD_TextosH,PASS,,"H3 - ${text}"${\n}
     END
     Close Browser
 

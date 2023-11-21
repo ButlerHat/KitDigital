@@ -33,7 +33,7 @@ Miaccion
     ${url}=       Get Url
     ${is_file}  Evaluate  bool("${url.split("/")[-1]}")
     IF  ${is_file} and ${FILTER_ENDING}  RETURN  
-    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},KitD_Paginas,PASS,,${url}${\n}
+    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},KitD_Paginas,PASS,,"${url}"${\n}
 
 Crear Archivo si no existe
     ${is_file}  Evaluate  bool(os.path.isfile("${RETURN_FILE}"))  modules=os

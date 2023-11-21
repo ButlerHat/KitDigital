@@ -80,7 +80,7 @@ callupcontact
     Take Screenshot  filename=${SCREENSHOT_DIR}${/}callupcontact.png
     
     Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Callupcontact: ${url_result}    ${SCREENSHOT_DIR}${/}callupcontact.png
-    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},callupcontact,PASS,,URL:${url_result}|SCREENSHOT:${SCREENSHOT_DIR}${/}callupcontact.png${\n}
+    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},callupcontact,PASS,,"URL:${url_result}|SCREENSHOT:${SCREENSHOT_DIR}${/}callupcontact.png"${\n}
 
 
 *** Keywords ***

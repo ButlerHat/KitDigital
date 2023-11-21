@@ -84,5 +84,5 @@ Store URL
     Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_MULTI-IDIOMA}   ${page_title}    ${OUTPUT_DIR}${/}screenshot_${page_title}.png
 
     # Close Page
-    Append To File    ${RETURN_FILE}    ${\n}${ID_EXECUTION},KitD_PantallazosUrls.robot,PASS,,${URL}${\n}
+    Append To File    ${RETURN_FILE}    ${\n}${ID_EXECUTION},KitD_PantallazosUrls.robot,PASS,,"${URL}"${\n}
 

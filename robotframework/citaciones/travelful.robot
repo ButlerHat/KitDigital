@@ -65,7 +65,7 @@ travelful
         # Get message this user already exists
         ${el_user}  Get Element Count    //span[contains(text(), "user")][contains(text(), "exists")]
         
-        IF  ${el_user} > 0   Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},travelful,FAIL,VariableError:username,El usuario ${username} ya está usado en travelful.net${\n}
+        IF  ${el_user} > 0   Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},travelful,FAIL,VariableError:username,"El usuario ${username} ya está usado en travelful.net"${\n}
         Fail  El usuario ya está usado en travelful.net
     END
 
@@ -89,7 +89,7 @@ travelful
     Take Screenshot  filename=${SCREENSHOT_DIR}${/}travelful.png
     
     Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Travelful: ${url_result}    ${SCREENSHOT_DIR}${/}travelful.png
-    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},travelful,PASS,,URL:${url_result}|SCREENSHOT:${SCREENSHOT_DIR}${/}travelful.png${\n}
+    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},travelful,PASS,,"URL:${url_result}|SCREENSHOT:${SCREENSHOT_DIR}${/}travelful.png"${\n}
 
 
 *** Keywords ***

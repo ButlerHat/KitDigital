@@ -73,7 +73,7 @@ Get Localidad
     ${options_no_commas}  Evaluate  "${options}".replace(',', ';')
     
     Log  ${options}  console=${True}
-    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},dondeestamos,PASS,,${options_no_commas}${\n}
+    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},dondeestamos,PASS,,"${options_no_commas}"${\n}
 
 
 dondeestamos
@@ -155,7 +155,7 @@ dondeestamos
     Take Screenshot  filename=${SCREENSHOT_DIR}${/}dondeestamos.png
     
     Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Donde estamos: ${url_result}   ${SCREENSHOT_DIR}${/}dondeestamos.png
-    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},dondeestamos,PASS,,URL:${url_result}|SCREENSHOT:${SCREENSHOT_DIR}${/}dondeestamos.png${\n}
+    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},dondeestamos,PASS,,"URL:${url_result}|SCREENSHOT:${SCREENSHOT_DIR}${/}dondeestamos.png"${\n}
 
 *** Keywords ***
 
@@ -195,7 +195,7 @@ Get Localidad from ${province_dondeestamos}
     
     IF  len(${provinces}) == 0
         Log  No se ha encontrado la provincia ${province_dondeestamos}
-        Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},dondeestamos,FAIL,VariableError:email,No hay localidades en ${province_dondeestamos}${\n}
+        Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},dondeestamos,FAIL,VariableError:email,"No hay localidades en ${province_dondeestamos}"${\n}
         Fail  No se ha encontrado la provincia ${province_dondeestamos}
     END
 

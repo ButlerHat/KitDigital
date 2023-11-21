@@ -109,7 +109,8 @@ def crawl_urls(kit_digital: KitDigital) -> KitDigital:
     url_selected = False
     with st.form("Url a parti de donde buscar"):
         url: str = st.text_input("Url a parti de donde buscar", value=kit_digital.url)
-        filter_ending: bool = st.checkbox("Filtrar por extensión", value=True)
+        st.info("Filtrar por extensión puede ser útil para páginas que tienen muchos enlaces. Puedes probar primero sin filtrar y reiniciar el stage.")
+        filter_ending: bool = st.checkbox("Filtrar por extensión", value=False)
         if st.form_submit_button("Enviar"):
             kit_digital.stages[StageType.CRAWL_URLS].info["url_crawl"] = url
             kit_digital.stages[StageType.CRAWL_URLS].info["filter_ending"] = filter_ending
