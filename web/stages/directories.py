@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import streamlit as st
 import utils.robot_handler as robot_handler
+import utils.remote_browser as remote_browser
 from kitdigital import KitDigital, Stage, StageStatus, StageType
 from utils.notifications import send_contact_to_ntfy
 
@@ -312,8 +313,6 @@ def callback_robot(ret_val: int | None, result_path: str, kwargs_callbacks: dict
                 msg = df_retry["msg"].iloc[i]
                 st.warning(f"Error: {msg}")
 
-    
-
 
 async def run_robot(kit_digital: KitDigital, info_file: str, results_path: str):
     """
@@ -336,12 +335,18 @@ async def run_robot(kit_digital: KitDigital, info_file: str, results_path: str):
 
     kit_digital.to_yaml()
 
-
     # Before executing the robot, empty the message file
     msg_csv: str = os.path.join(results_path, "msg.csv")
     robot_handler.create_csv(msg_csv)
     id_execution = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+
+    if not kit_digital.chrome_server:
+        raise Exception("No se ha podido crear el navegador. No hay id_ o novnc_endpoint en la respuesta.")
+
     args = [
+        f'WSENDPOINT:"{kit_digital.chrome_server.playwright_endpoint}"',
+        f'WORD_FILE:"{kit_digital.word_file}"',
+        f'SCREENSHOT_DIR:"{results_path}"',
         f'INFO_FILE:"{info_file}"',
         f'RETURN_FILE:"{msg_csv}"',
         f'ID_EXECUTION:"{id_execution}"'
@@ -367,7 +372,15 @@ def run_robot_get_provinces(kit_digital: KitDigital, provincia_short: str, resul
     msg_csv: str = os.path.join(results_path, "msg.csv")
     robot_handler.create_csv(msg_csv)
     id_execution = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+
+    # get browser
+    kit_digital = remote_browser.get_browser(kit_digital, remote_browser.ChromeType.PLAYWRIGHT)
+
+    if not kit_digital.chrome_server:
+        raise Exception("No se ha podido crear el navegador. No hay id_ o novnc_endpoint en la respuesta.")
+    
     args = [
+        f'WSENDPOINT:"{kit_digital.chrome_server.playwright_endpoint}"',
         f'province_dondeestamos:"{provincia_short}"',
         f'SCREENSHOT_DIR:"{results_path}"',
         f'RETURN_FILE:"{msg_csv}"',
@@ -462,6 +475,8 @@ def get_dondeestamos_localidad(kit_digital: KitDigital) -> tuple[KitDigital, str
     
 
 def directories(kit_digital: KitDigital) -> KitDigital:
+    st.info("Ejecuta tantas veces como sea necesario este paso, solo se subirán las páginas que no estén subidas.")
+    
     # Create Urls Stage
     directories_stage: Stage = kit_digital.stages[StageType.DIRECTORIES]
 
@@ -487,6 +502,8 @@ def directories(kit_digital: KitDigital) -> KitDigital:
             json.dump(directories_stage.info["company_data"], f, indent=4)
 
         # Run robot
+        # get browser
+        kit_digital = remote_browser.get_browser(kit_digital, remote_browser.ChromeType.PLAYWRIGHT)
         asyncio.run(run_robot(kit_digital, company_file, directories_stage.results_path))
         
         # Mark Directories as PASS if all robots are PASS

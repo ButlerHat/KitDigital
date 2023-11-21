@@ -14,3 +14,6 @@ dependencies:
       - openpyxl
       - pyyaml
       - extra_streamlit_components
+      - pillow  # For image -> pdf
+      - fpdf  # For image -> pdf
+      - python-docx # Remove placeholders

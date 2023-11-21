@@ -4,7 +4,7 @@ import asyncio
 import pandas as pd
 import numpy as np
 import streamlit as st
-import utils.get_browser as get_browser
+import utils.remote_browser as remote_browser
 import utils.robot_handler as robot_handler
 import utils.notifications as notifications
 from kitdigital import KitDigital, StageStatus, StageType
@@ -104,6 +104,7 @@ async def run_robot(kit_digital: KitDigital):
         st.info(f"Espere a la navegación a {url}. Por favor, cambie de idioma y después realice el pantallazo con el botón de abajo.")
         args = [
             f'WSENDPOINT:"{kit_digital.chrome_server.playwright_endpoint}"',
+            f'UTILS_ENDPOINT:"{kit_digital.chrome_server.utils_endpoint}"',
             f'COOKIES_DIR:"{kit_digital.cookies_dir}"',
             f'URL:"{kit_digital.url}"',
             f'WORD_FILE:"{kit_digital.word_file}"',
@@ -113,6 +114,7 @@ async def run_robot(kit_digital: KitDigital):
         ]
 
         if "executing_screenshots" not in st.session_state or not st.session_state["executing_screenshots"]:
+            pl_warining = st.empty()
             await robot_handler.run_robot(
                 "pantallazos_multiidioma", 
                 args, 
@@ -123,6 +125,7 @@ async def run_robot(kit_digital: KitDigital):
                 msg_info="Obteniendo los pantallazos en multi-idioma. Por favor, haz click en el cambio de idioma.",
                 include_tags=["1"]
             )
+            pl_warining.empty()
             st.session_state["executing_screenshots"] = True
         
         # Put a button and wait for it to be clicked.
@@ -162,7 +165,8 @@ def get_pantallazos_multiidioma(kit_digital: KitDigital) -> KitDigital:
     kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status = StageStatus.PROGRESS
     kit_digital.to_yaml()
 
-    kit_digital = get_browser.get_and_show_browser(kit_digital, StageType.PANTALLAZOS_MULTIIDIOMA)
+    kit_digital = remote_browser.get_browser(kit_digital, remote_browser.ChromeType.CDP, 'maximize')
+    remote_browser.show_browser(kit_digital, StageType.PANTALLAZOS_MULTIIDIOMA)
     asyncio.run(run_robot(kit_digital))  # Here store kit digital to yaml
 
     # Refresh kit digital

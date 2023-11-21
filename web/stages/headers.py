@@ -6,7 +6,8 @@ import pandas as pd
 import numpy as np
 import utils.robot_handler as robot_handler
 import utils.notifications as notifications
-from kitdigital import KitDigital, StageStatus, StageType
+import utils.remote_browser as remote_browser
+from kitdigital import ChromeType, KitDigital, StageStatus, StageType
 from utils.notifications import send_contact_to_ntfy
 
 
@@ -41,7 +42,11 @@ def callback_headers(ret_val: int | None, result_path: str, kwargs_callbacks: di
     # Get the row with id_execution = id_execution. If is empty, return
     df_id = df[df["id_execution"] == np.int64(id_execution)]
     if len(df_id) == 0:
-        st.warning("No se ha subido a ninguna página.")
+        # Check if id_execution is a string
+        df_id = df[df["id_execution"] == str(id_execution)]
+    
+    if len(df_id) == 0:
+        st.warning("No se ha podido encontrar las cabeceras.")
         # Send notification
         url: str = kit_digital.url
         kit_digital = send_contact_to_ntfy(kit_digital, f"Automatizacion headers. No ha funcionado la automatización para {url}.")
@@ -88,7 +93,11 @@ def run_robot(kit_digital: KitDigital, url: str):
     robot_handler.create_csv(msg_csv)
     id_execution = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
     
+    if not kit_digital.chrome_server:
+        raise Exception("No se ha podido crear el navegador. No hay id_ o novnc_endpoint en la respuesta.")
+
     args = [
+        f'WSENDPOINT:"{kit_digital.chrome_server.playwright_endpoint}"',
         f'URL:"{url}"',
         f'RETURN_FILE:"{msg_csv}"',
         f'ID_EXECUTION:"{id_execution}"'
@@ -101,16 +110,19 @@ def run_robot(kit_digital: KitDigital, url: str):
         output_dir=results_path,
         callbacks=[callback_headers, notifications.callback_notify],
         kwargs_callbacks={"kit_digital": kit_digital},
-        msg_info=f"Obteniendo páginas de {kit_digital.url}"
+        msg_info=f"Obteniendo encabezados de {kit_digital.url}"
     ))
 
 
 def get_headers(kit_digital: KitDigital) -> KitDigital:
-    
+    is_submitted = False
     with st.form('headers'):
         url: str = st.text_input('Url de la página principal', value=kit_digital.url)
         if st.form_submit_button('Obtener'):
-            run_robot(kit_digital, url)  # Here store kit digital to yaml
+            is_submitted = True
+    if is_submitted:
+        kit_digital = remote_browser.get_browser(kit_digital, ChromeType.PLAYWRIGHT)
+        run_robot(kit_digital, url)  # Here store kit digital to yaml
 
     # Refresh kit digital
     kit_d = KitDigital.get_kit_digital(kit_digital.url)

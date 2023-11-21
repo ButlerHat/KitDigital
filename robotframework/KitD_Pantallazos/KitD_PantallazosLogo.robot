@@ -15,7 +15,7 @@ https://youtu.be/KkGvbPF79X8?t=327
 
 
 *** Settings ***
-Library    Browser
+Library    ButlerRobot.AIBrowserLibrary  stealth_mode=${True}  record=${False}  console=${False}  presentation_mode=${True}  WITH NAME  Browser 
 Library    OperatingSystem
 Library    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/KitD_Pantallazos/word_helper.py
 
@@ -23,28 +23,30 @@ Library    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/Test
 *** Variables ***
 ${url}    https://djadelpeluqueria.es/
 
-${RETURN_FILE}  ${OUTPUT_DIR}${/}msg.csv
-${ID_EXECUTION}  0
 # ${COOKIES_DIR}   /tmp/djadelpeluqueria
-${WORD_FILE}    ${OUTPUT_DIR}${/}example1.docx
-${LOGO_SCREENSHOT}  ${OUTPUT_DIR}${/}logo.png
-${escritorio}   Versión escritorio
-${movil}        Versión móvil
-${tableta}      Versión tableta
+
 
 *** Test Cases ***
-Get Title Screenshots and versions for URLs
-    Create New Document    ${WORD_FILE}
-    Open URL and Get Info    ${url}
-    Append To File    ${RETURN_FILE}    ${\n}${ID_EXECUTION},KitD_PantallazosLogo.robot,PASS,,DOC:${WORD_FILE}|SCREENSHOT:${LOGO_SCREENSHOT}${\n}
-
-*** Keywords *** 
 Open URL and Get Info
-    [Arguments]    ${url}
-    # New Persistent Context    userDataDir=${COOKIES_DIR}   browser=chromium  headless=False  url=${url}
-    New Browser    browser=chromium  headless=${True}
-    New Context    storageState=${COOKIES_DIR}${/}cookies.json
-    New Page    ${url}
+    ${variables}  Get Variables
+    ${is_WSENDPOINT}   Evaluate   "\${WSENDPOINT}" in $variables
+    IF  ${is_WSENDPOINT} == True
+        # Para Prod
+        TRY
+            Connect To Browser Over Cdp    ${WSENDPOINT}
+            Add All Cookies From State  ${COOKIES_DIR}${/}cookies.json
+            Go To  ${URL}
+        EXCEPT
+            Connect To Browser    ${WSENDPOINT}
+            New Context  viewport=${None}  storageState=${COOKIES_DIR}${/}cookies.json
+            New Page  ${URL}
+        END
+    ELSE
+        # Para Dev
+        New Browser  chromium  headless=${False}
+        New Context  viewport=${None}  storageState=${COOKIES_DIR}${/}cookies.json
+        New Page  ${URL}
+    END
 
     ${STATUS}  ${MSG}  Run Keyword And Ignore error  Wait For Elements State    xpath=//footer  visible  timeout=5s
     Sleep  2
@@ -53,7 +55,5 @@ Open URL and Get Info
     ELSE
         Scroll By  vertical=100%
     END
-    Take Screenshot  filename=${LOGO_SCREENSHOT}
-    Append Text And Picture To Document    ${WORD_FILE}  ${EMPTY}   ${EMPTY}    ${LOGO_SCREENSHOT}
+    # Leave browser open to capture os screenshot
 
-    Close Browser

@@ -7,10 +7,13 @@ Variables      /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/
 
 
 *** Variables ***
+${URL}  http://www.travelful.net/register.asp
+# ${WSENDPOINT}
+
 ${WORD_FILE}    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/evidencias.docx
 ${SCREENSHOT_DIR}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/directories
 
-# ${info_file}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/directories/company.json
+${info_file}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueriaes/directories/company.json
 # ${RETURN_FILE}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/travelful/msg.csv
 # ${email}  calderea@bluepath.es
 # ${username}  caldereabp  # Debe ser unica
@@ -30,9 +33,25 @@ travelful
     # ${username}  Evaluate  f'${username}{random.randint(0, 9)}{random.randint(0, 9)}{random.randint(0, 9)}{random.randint(0, 9)}'  modules=random
 
     # Browser.New Stealth Persistent Context  userDataDir=/tmp/travelful  browser=chromium  headless=${False}  url=http://www.travelful.net/register.asp
-    New Browser  chromium  headless=${True} 
-    New Context    
-    New Page  http://www.travelful.net/register.asp
+
+    ${variables}  Get Variables
+    ${is_WSENDPOINT}   Evaluate   "\${WSENDPOINT}" in $variables
+    IF  ${is_WSENDPOINT} == True
+        # Para Prod
+        TRY
+            Connect To Browser Over Cdp    ${WSENDPOINT}
+            Go To  ${URL}
+        EXCEPT
+            Connect To Browser    ${WSENDPOINT}
+            New Context  viewport=${None}
+            New Page  ${URL}
+        END
+    ELSE
+        # Para Dev
+        New Browser  chromium  headless=${False}
+        New Context  viewport=${None}
+        New Page  ${URL}
+    END
     
     Write ${username} at Nombre
     Write ${email} at Email
@@ -62,22 +81,22 @@ travelful
     Sleep    1s
     Click at Save changes
     Sleep  1
-    ${url}  Get public url
-    Log  La empresa se ha creado correctamente: ${url}	console=${True}	
+    ${url_result}  Get public url
+    Log  La empresa se ha creado correctamente: ${url_result}	console=${True}	
     
-    Go To  ${url}
+    Go To  ${url_result}
     Run Keyword And Ignore Error  Wait Until Network Is Idle
-    Take Screenshot  fullPage=${True}  filename=${SCREENSHOT_DIR}${/}travelful.png
+    Take Screenshot  filename=${SCREENSHOT_DIR}${/}travelful.png
     
-    Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Travelful: ${url}    ${SCREENSHOT_DIR}${/}travelful.png
-    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},travelful,PASS,,URL:${url}|SCREENSHOT:${SCREENSHOT_DIR}${/}travelful.png${\n}
+    Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Travelful: ${url_result}    ${SCREENSHOT_DIR}${/}travelful.png
+    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},travelful,PASS,,URL:${url_result}|SCREENSHOT:${SCREENSHOT_DIR}${/}travelful.png${\n}
 
 
 *** Keywords ***
 
 Get public url
-    ${url}  Get Url
-    RETURN  ${url}
+    ${url_result}  Get Url
+    RETURN  ${url_result}
     
 Write ${username} at Nombre
     Browser.Type Text    xpath=//input[@id="username"]    ${username}

@@ -53,7 +53,7 @@ RUN rm -rf web-conda.yaml robotframework-conda.yaml
 
 
 
-FROM base AS prod 
+FROM mcr.microsoft.com/devcontainers/miniconda:0-3 AS prod
 
 USER root
 

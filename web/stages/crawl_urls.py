@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import streamlit as st
 import utils.robot_handler as robot_handler
+import utils.remote_browser as remote_browser
 import utils.notifications as notifications
 from kitdigital import KitDigital, Stage, StageStatus, StageType
 
@@ -72,7 +73,11 @@ def run_robot(kit_digital: KitDigital, results_path: str) -> int | None:
     robot_handler.create_csv(msg_csv)
     id_execution = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
     
+    if not kit_digital.chrome_server:
+        raise Exception("No se ha podido crear el navegador. No hay id_ o novnc_endpoint en la respuesta.")
+
     args = [
+        f'WSENDPOINT:"{kit_digital.chrome_server.playwright_endpoint}"',
         f'URL:"{kit_digital.stages[StageType.CRAWL_URLS].info["url_crawl"]}"',
         f'RETURN_FILE:"{msg_csv}"',
         f'ID_EXECUTION:"{id_execution}"',
@@ -112,6 +117,8 @@ def crawl_urls(kit_digital: KitDigital) -> KitDigital:
             url_selected = True
     
     if url_selected:
+        # Get Browser
+        kit_digital = remote_browser.get_browser(kit_digital, remote_browser.ChromeType.PLAYWRIGHT)
         run_robot(kit_digital, urls_stage.results_path)  # Here store kit digital to yaml
 
     # Refresh kit digital

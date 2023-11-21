@@ -70,7 +70,7 @@ async def run_robot(
         msg_info=None,
         pabot=False, 
         include_tags: list | None =None
-    ):
+    ) -> int | None:
     """
     Run robot specified in robot variable
     params:

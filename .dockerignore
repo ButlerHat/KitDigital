@@ -2,7 +2,7 @@
 node_modules/
 misurls.txt
 cloudflare_secret.yml
-playwright/
+.git/
 
 # RobotFramework
 result_kit/

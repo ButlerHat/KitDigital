@@ -15,7 +15,7 @@ https://youtu.be/KkGvbPF79X8?t=327
 
 
 *** Settings ***
-Library    Browser
+Library    ButlerRobot.AIBrowserLibrary  stealth_mode=${True}  record=${False}  console=${False}  presentation_mode=${True}  WITH NAME  Browser 
 Library    Collections
 Library    OperatingSystem
 Library    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/KitD_Pantallazos/word_helper.py
@@ -28,6 +28,8 @@ Library    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/Test
 # ${url5}    https://djadelpeluqueria.es/galeria-de-fotos/
 # ${url6}    https://djadelpeluqueria.es/acerca-de/
 
+# ${WSENDPOINT}
+# ${UTILS_ENDPOINT}
 ${RETURN_FILE}  ${OUTPUT_DIR}${/}msg.csv
 ${ID_EXECUTION}  0
 # ${COOKIES_DIR}   /tmp/djadelpeluqueria
@@ -65,10 +67,26 @@ Get Title Screenshots and versions for URLs
 *** Keywords *** 
 Open URL and Get Info
     [Arguments]    ${url}
-    # New Persistent Context    userDataDir=${COOKIES_DIR}   browser=chromium  headless=False  url=${url}
-    New Browser    browser=chromium  headless=${True}
-    New Context    storageState=${COOKIES_DIR}${/}cookies.json
-    New Page    ${url}
+    
+    ${variables}  Get Variables
+    ${is_WSENDPOINT}   Evaluate   "\${WSENDPOINT}" in $variables
+    IF  ${is_WSENDPOINT} == True
+        # Para Prod
+        TRY
+            Connect To Browser Over Cdp    ${WSENDPOINT}
+            Add All Cookies From State  ${COOKIES_DIR}${/}cookies.json
+            Go To  ${URL}
+        EXCEPT
+            Connect To Browser    ${WSENDPOINT}
+            New Context  viewport=${None}  storageState=${COOKIES_DIR}${/}cookies.json
+            New Page  ${URL}
+        END
+    ELSE
+        # Para Dev
+        New Browser  chromium  headless=${False}
+        New Context  viewport=${None}  storageState=${COOKIES_DIR}${/}cookies.json
+        New Page  ${URL}
+    END
 
     Sleep  2
     # Click    xpath=//button[contains(text(), 'Aceptar')]
@@ -76,7 +94,7 @@ Open URL and Get Info
     ${page_title}=    Run Keyword If    ${status}==True    Get Title    ELSE    Set Variable    ${EMPTY}
 
     Sleep  3
-    Take Screenshot  filename=${OUTPUT_DIR}${/}screenshot_${page_title}.png
+    Take Os Screenshot  ${UTILS_ENDPOINT}  ${OUTPUT_DIR}${/}screenshot_${page_title}.png
     Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_WEB}   ${page_title}    ${OUTPUT_DIR}${/}screenshot_${page_title}.png
 
     Close Browser
@@ -84,10 +102,26 @@ Open URL and Get Info
 
 Take Different Version Screenshots
     [Arguments]    ${url}
-    # New Persistent Context    userDataDir=${COOKIES_DIR}   browser=chromium  headless=False  url=${url}
-    New Browser    browser=chromium  headless=${True}
-    New Context    storageState=${COOKIES_DIR}${/}cookies.json
-    New Page    ${url}
+    
+    ${variables}  Get Variables
+    ${is_WSENDPOINT}   Evaluate   "\${WSENDPOINT}" in $variables
+    IF  ${is_WSENDPOINT} == True
+        # Para Prod
+        TRY
+            Connect To Browser Over Cdp    ${WSENDPOINT}
+            Add All Cookies From State  ${COOKIES_DIR}${/}cookies.json
+            Go To  ${URL}
+        EXCEPT
+            Connect To Browser    ${WSENDPOINT}
+            New Context  viewport=${None}  storageState=${COOKIES_DIR}${/}cookies.json
+            New Page  ${URL}
+        END
+    ELSE
+        # Para Dev
+        New Browser  chromium  headless=${False}
+        New Context  viewport=${None}  storageState=${COOKIES_DIR}${/}cookies.json
+        New Page  ${URL}
+    END
     
     Sleep  2
     # Click    xpath=//button[contains(text(), 'Aceptar')]

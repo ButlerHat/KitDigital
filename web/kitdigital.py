@@ -40,6 +40,7 @@ class StageType(Enum):
     LOGO_KIT_DIGITAL = "LOGO_KIT_DIGITAL"
     PANTALLAZOS_URLS = "PANTALLAZOS_URLS"
     PANTALLAZOS_MULTIIDIOMA = "PANTALLAZOS_MULTIIDIOMA"
+    RESULTS = "RESULTS"
 
     def __str__(self):
         return f"StageType: {self.value}"
@@ -79,17 +80,39 @@ class Stage:
         stage.info = data["info"]
         return stage
 
+
+class ChromeType(Enum):
+    """
+    Enum class for stage types
+    """
+    CDP = "CDP"
+    PLAYWRIGHT = "PLAYWRIGHT"
+
+    def __str__(self):
+        return f"ChromeType: {self.value}"
+    
+    def __hash__(self):
+        return hash(self.value)
+    
+    def __eq__(self, other):
+        return hash(self) == hash(other)
+
+
 @dataclass
 class ChromeServer:
     id_: str
     novnc_endpoint: str
     playwright_endpoint: str
+    utils_endpoint: str
+    chrome_type: ChromeType
 
     def to_dict(self):
         return {
             "id_": self.id_,
             "novnc_endpoint": self.novnc_endpoint,
-            "playwright_endpoint": self.playwright_endpoint
+            "playwright_endpoint": self.playwright_endpoint,
+            "utils_endpoint": self.utils_endpoint,
+            "chrome_type": self.chrome_type.value
         }
     
     @classmethod
@@ -97,7 +120,9 @@ class ChromeServer:
         return cls(
             id_ = data["id_"],
             novnc_endpoint = data["novnc_endpoint"],
-            playwright_endpoint = data["playwright_endpoint"]
+            playwright_endpoint = data["playwright_endpoint"],
+            utils_endpoint = data["utils_endpoint"],
+            chrome_type = ChromeType(data["chrome_type"])
         )
 
 class KitDigital:
@@ -111,6 +136,7 @@ class KitDigital:
         self.cookies_dir: str = os.path.join(self.results_path, "cookies")
         self.info_file: str = os.path.join(self.results_path, "info_kit.yaml")
         self.word_file: str = os.path.join(self.results_path, "evidencias.docx")
+        self.word_file_result: str = os.path.join(self.results_path, "evidencias_result.docx")
         self.chrome_server: ChromeServer | None = None
         self.stages: dict[StageType, Stage] = {
             StageType.ACCEPT_COOKIES: Stage("Aceptación De Cookies", os.path.join(self.results_path, "accept_cookies")),
@@ -125,6 +151,7 @@ class KitDigital:
             StageType.LOGO_KIT_DIGITAL: Stage("Logo Kit Digital", os.path.join(self.results_path, "logo_kit_digital")),
             StageType.PANTALLAZOS_URLS: Stage("Pantallazos Urls", os.path.join(self.results_path, "pantallazos_urls")),
             StageType.PANTALLAZOS_MULTIIDIOMA: Stage("Pantallazos Multiidioma", os.path.join(self.results_path, "pantallazos_multiidioma")),
+            StageType.RESULTS: Stage("Resultados", os.path.join(self.results_path, "results"), StageStatus.PASS),
         }
         
         if not os.path.exists(self.results_path):

@@ -6,9 +6,9 @@ import pandas as pd
 import numpy as np
 import utils.robot_handler as robot_handler
 import utils.notifications as notifications
-from kitdigital import KitDigital, StageStatus, StageType
+import utils.remote_browser as remote_browser
+from kitdigital import KitDigital, StageStatus, StageType, ChromeType
 from utils.notifications import send_contact_to_ntfy
-
 
 
 def callback_pantallazos(ret_val: int | None, result_path: str, kwargs_callbacks: dict, run_robot_kwargs: dict):  # pylint: disable=unused-argument
@@ -77,8 +77,13 @@ async def run_robot(kit_digital: KitDigital):
         st.warning("Se deben obtener las urls de la página previamente.")
         st.stop()
     urls = kit_digital.stages[StageType.SELECT_URLS].info["urls"]
+
+    if not kit_digital.chrome_server:
+        raise Exception("No se ha podido crear el navegador. No hay id_ o novnc_endpoint en la respuesta.")
     
     args = [
+        f'WSENDPOINT:"{kit_digital.chrome_server.playwright_endpoint}"',
+        f'UTILS_ENDPOINT:"{kit_digital.chrome_server.utils_endpoint}"',
         f'COOKIES_DIR:"{kit_digital.cookies_dir}"',
         f'URL:"{kit_digital.url}"',
         f'WORD_FILE:"{kit_digital.word_file}"',
@@ -94,7 +99,7 @@ async def run_robot(kit_digital: KitDigital):
         output_dir=results_path,
         callbacks=[callback_pantallazos, notifications.callback_notify],
         kwargs_callbacks={"kit_digital": kit_digital},
-        msg_info=f"Obteniendo el pantallazo del logo del kit digital {kit_digital.url}"
+        msg_info=f"Obteniendo pantallazos de la página: {kit_digital.url}"
     )
 
 
@@ -103,6 +108,9 @@ def get_pantallazos_urls(kit_digital: KitDigital) -> KitDigital:
     kit_digital.stages[StageType.PANTALLAZOS_URLS].status = StageStatus.PROGRESS
     kit_digital.to_yaml()
     
+    # Get Browser
+    kit_digital = remote_browser.get_browser(kit_digital, ChromeType.CDP, 'maximize')
+    # Run robot
     asyncio.run(run_robot(kit_digital))  # Here store kit digital to yaml
 
     # Refresh kit digital

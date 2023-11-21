@@ -22,6 +22,7 @@ Library    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/Test
 *** Variables ***
 # ${URL}  https://www.djadelpeluquero.com/
 ${WSENDPOINT}  ws://192.168.85.2/playwright_6cfa552a-53e0-4733-914d-5d3785b27018/devtools/browser/2a5daef8-f9fb-4e75-acda-16c557a4f865
+# ${UTILS_ENDPOINT} 
 
 ${RETURN_FILE}  ${OUTPUT_DIR}${/}msg.csv
 ${ID_EXECUTION}  0
@@ -31,48 +32,28 @@ ${WORD_FILE}    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat
 
 
 *** Test Cases ***
-# Get Title Screenshots and versions for URLs
-#     # Get Urls
-#     @{urls}=    Create List
-#     ${variables}=  Get variables
-#     FOR  ${i}  IN RANGE  1  30
-#         ${STATUS}  ${MSG}  Run Keyword And Ignore Error   Should be true      "\${url${i}}" in $variables
-#         IF  "${STATUS}"=="PASS"
-#             Append To List    ${urls}    ${url${i}}
-#             Log  ${url${i}} appended to list  console=${true}
-#             CONTINUE
-#         ELSE
-#             BREAK
-#         END
-#     END
-
-#     # Copy template
-#     # Copy File    ${WORD_FILE_TEMPLATE}  ${WORD_FILE}
-
-#     # Create New Document    ${WORD_FILE}
-#     ${urls_incomplete}  Check If Identifier Exists    ${WORD_FILE}    {PANTALLAZOS_MULTI-IDIOMA}
-
-#     IF  ${urls_incomplete}
-#         FOR    ${url}    IN    @{urls}
-#             Open URL and Get Info    ${url}
-#         END
-#         Remove Identifier    ${WORD_FILE}    {PANTALLAZOS_MULTI-IDIOMA}
-#         Append To File    ${RETURN_FILE}    ${\n}${ID_EXECUTION},KitD_PantallazosUrls.robot,PASS,,Se han anadido los pantallazos de los dispositivos${\n}
-#     ELSE
-#         Append To File    ${RETURN_FILE}    ${\n}${ID_EXECUTION},KitD_PantallazosUrls.robot,PASS,,Ya se habia ejecutado${\n}
-#         Skip  Ya se habia ejecutado
-#     END
 
 Open URL and Get Info
     [Tags]  1
-    TRY
-        Connect To Browser Over Cdp    ${WSENDPOINT}
-        Add All Cookies From State    state_json_paht=${COOKIES_DIR}/cookies.json
-        Go to   ${url}
-    EXCEPT
-        Connect To Browser    ${WSENDPOINT}
-        New Context    viewport=${None}  storageState=${COOKIES_DIR}/cookies.json
-        New Page   ${url}
+
+    ${variables}  Get Variables
+    ${is_WSENDPOINT}   Evaluate   "\${WSENDPOINT}" in $variables
+    IF  ${is_WSENDPOINT} == True
+        # Para Prod
+        TRY
+            Connect To Browser Over Cdp    ${WSENDPOINT}
+            Add All Cookies From State    ${COOKIES_DIR}${/}cookies.json
+            Go To  ${URL}
+        EXCEPT
+            Connect To Browser    ${WSENDPOINT}
+            New Context  viewport=${None}  storageState=${COOKIES_DIR}${/}cookies.json
+            New Page  ${URL}
+        END
+    ELSE
+        # Para Dev
+        New Browser  chromium  headless=${False}
+        New Context  viewport=${None}  storageState=${COOKIES_DIR}${/}cookies.json
+        New Page  ${URL}  
     END
 
     # Record one click and leave the page open
@@ -92,11 +73,11 @@ Store URL
 
     TRY
         ${old_timeout}  Set Browser Timeout    1
-        Take Screenshot  filename=${OUTPUT_DIR}${/}screenshot_${page_title}.png
+        Take Os Screenshot  ${UTILS_ENDPOINT}  ${OUTPUT_DIR}${/}screenshot_${page_title}.png
     EXCEPT
         ${pages}  Get Page Ids
         Switch Page    ${pages[-1]}
-        Take Screenshot  filename=${OUTPUT_DIR}${/}screenshot_${page_title}.png
+        Take Os Screenshot  ${UTILS_ENDPOINT}  ${OUTPUT_DIR}${/}screenshot_${page_title}.png
     FINALLY
         Set Browser Timeout    ${old_timeout}
     END

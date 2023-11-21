@@ -6,8 +6,8 @@ import pandas as pd
 import numpy as np
 import utils.robot_handler as robot_handler
 import utils.notifications as notifications
-import utils.get_browser as get_browser
-from kitdigital import KitDigital, StageStatus, StageType
+import utils.remote_browser as remote_browser
+from kitdigital import ChromeType, KitDigital, StageStatus, StageType
 from utils.notifications import send_contact_to_ntfy
 
 
@@ -120,8 +120,10 @@ def accept_cookies(kit_digital: KitDigital) -> KitDigital:
     kit_digital.stages[StageType.ACCEPT_COOKIES].status = StageStatus.PROGRESS
     kit_digital.to_yaml()
     
-    # Request docker chrome
-    kit_digital = get_browser.get_and_show_browser(kit_digital, StageType.ACCEPT_COOKIES)
+    # Get Browser
+    kit_digital = remote_browser.get_browser(kit_digital, ChromeType.CDP)
+    # Show browser
+    kit_digital = remote_browser.show_browser(kit_digital, StageType.ACCEPT_COOKIES)
     asyncio.run(run_robot(kit_digital))  # Here store kit digital to yaml
 
     # Refresh kit digital

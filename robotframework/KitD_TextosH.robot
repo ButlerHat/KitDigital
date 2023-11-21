@@ -1,5 +1,5 @@
 *** Settings ***
-Library    Browser
+Library    ButlerRobot.AIBrowserLibrary  stealth_mode=${True}  record=${False}  console=${False}  presentation_mode=${True}  WITH NAME  Browser 
 Library    OperatingSystem
 
 
@@ -7,12 +7,32 @@ Library    OperatingSystem
 ${url}    https://djadelpeluqueria.es
 ${RETURN_FILE}  ${OUTPUT_DIR}${/}msg.txt
 ${ID_EXECUTION}  0
+# ${is_WSENDPOINT}
 
 
 *** Test Cases ***
 Obtener Textos de Encabezados
     [Setup]   Crear Archivo si no existe
-    Open Browser    ${url}    browser=chromium  headless=${True}
+    
+    ${variables}  Get Variables
+    ${is_WSENDPOINT}   Evaluate   "\${WSENDPOINT}" in $variables
+    IF  ${is_WSENDPOINT} == True
+        # Para Prod
+        TRY
+            Connect To Browser Over Cdp    ${WSENDPOINT}
+            Go To  ${URL}
+        EXCEPT
+            Connect To Browser    ${WSENDPOINT}
+            New Context  viewport=${None}
+            New Page  ${URL}
+        END
+    ELSE
+        # Para Dev
+        New Browser  chromium  headless=${False}
+        New Context  viewport=${None}
+        New Page  ${URL}
+    END
+
     wait until network is idle
     ${h1_elements}=    Get Elements    xpath=//h1
     ${h2_elements}=    Get Elements    xpath=//h2

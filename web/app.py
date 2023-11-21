@@ -1,5 +1,5 @@
 import streamlit as st
-import utils.get_browser as get_browser
+import utils.remote_browser as remote_browser
 import extra_streamlit_components as stx
 from stages.accept_cookies import accept_cookies
 from stages.directories import directories
@@ -9,6 +9,7 @@ from stages.headers import get_headers
 from stages.logo_kit import get_logo_kit
 from stages.pantallazos_urls import get_pantallazos_urls
 from stages.pantallazos_multiidioma import get_pantallazos_multiidioma
+from stages.results import show_results
 from kitdigital import KitDigital, Stage, StageStatus, StageType
 
 
@@ -90,6 +91,8 @@ def display_title(msg: str, status: StageStatus):
         status_msg = '🕒 <span style="color:blue">Pendiente:</span>'
     elif status == StageStatus.PROGRESS:
         status_msg = '🕒 <span style="color:orange">En progreso:</span>'
+    elif status == StageStatus.SKIP:
+        status_msg = '👷 <span style="color:grey">No disponible:</span>'
     else:
         status_msg = ""
 
@@ -124,7 +127,20 @@ kit_digital: KitDigital = created_kit_digital
 
 title_placeholder.markdown(f"# Kit Digital (Beta) ({kit_digital.url})")
 
-val = stx.stepper_bar(steps=["Aceptar cookies", "Seleccionar Urls", "Subir Directorios", "Seo Básico", "Obtener H1, H2, H3", "Obtener el logo de Kit Digital", "Pantallazos Urls", "Pantallazos Multiidioma"])
+val = stx.stepper_bar(steps=[
+    "Aceptar cookies", 
+    "Seleccionar Urls", 
+    "Subir Directorios", 
+    "Seo Básico", 
+    "Obtener H1, H2, H3", 
+    "Obtener el logo de Kit Digital", 
+    "Pantallazos Urls", 
+    "Pantallazos Multiidioma",
+    "Informe de accesibilidad",
+    "Resultados"
+    ],
+    lock_sequence=False
+)
 
 # Crawl urls
 if val == 0:
@@ -217,6 +233,8 @@ if val == 4:
     col1, col2 = st.columns([4, 1])
     with col1:
         display_title("Obtener H1, H2, H3", kit_digital.stages[StageType.HEADERS_SEO].status)
+    with col2:
+        restart_stage(kit_digital, StageType.HEADERS_SEO)
     if kit_digital.stages[StageType.HEADERS_SEO].status != StageStatus.PASS:
         get_headers(kit_digital)
         if kit_digital.stages[StageType.HEADERS_SEO].status == StageStatus.PASS:
@@ -247,12 +265,12 @@ if val == 5:
     # Show Acreditacion cumplimiento en materia de publicidad
     if kit_digital.stages[StageType.LOGO_KIT_DIGITAL].status == StageStatus.PASS:
         st.image(kit_digital.stages[StageType.LOGO_KIT_DIGITAL].info["screenshot"])
-        with open(kit_digital.stages[StageType.LOGO_KIT_DIGITAL].info["word"], "rb") as f:
+        with open(kit_digital.stages[StageType.LOGO_KIT_DIGITAL].info["pdf"], "rb") as f:
             st.download_button(
                 label="Descargar documento",
                 data=f,
-                file_name="pantallazo_logo.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                file_name="pantallazo_logo.pdf",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             )
 
 if val == 6:
@@ -270,11 +288,12 @@ if val == 6:
 
     # Show Plantilla de recopilacion de evidencias
     if kit_digital.stages[StageType.PANTALLAZOS_URLS].status == StageStatus.PASS:
+        st.info("Se puede descargar para visualizar el documento, pero no está terminado. Espere a llegar al apartado de resultados.")
         with open(kit_digital.stages[StageType.PANTALLAZOS_URLS].info["word"], "rb") as f:
             st.download_button(
-                label="Descargar documento",
+                label="Descargar documento NO TERMINADO",
                 data=f,
-                file_name="pantallazos_urls.docx",
+                file_name="pantallazos_urls_preview.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 key="pantallazos_urls"
             )
@@ -294,19 +313,30 @@ if val == 7:
 
     # Show Plantilla de recopilacion de evidencias multi-idioma
     if kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status == StageStatus.PASS:
+        st.info("Se puede descargar para visualizar el documento, pero no está terminado. Espere a llegar al apartado de resultados.")
         with open(kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].info["word"], "rb") as f:
             st.download_button(
-                label="Descargar documento",
+                label="Descargar documento NO TERMINADO",
                 data=f,
-                file_name="pantallazos_multiidioma.docx",
+                file_name="pantallazos_multiidioma_preview.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 key="pantallazos_multiidioma"
             )
 
+if val == 8:
+    display_title("Informe de accesibilidad", StageStatus.SKIP)
+    st.warning('Se está elaborando el informe de accesibilidad. Aún no está disponible. Plantilla en resultados.')
+
+
 # If all stages pass, delete browser
 if all([x.status == StageStatus.PASS for x in kit_digital.stages.values()]):
-    kit_digital = get_browser.delete_browser_after_stage(kit_digital)
+    kit_digital = remote_browser.delete_browser_after_stage(kit_digital)
     kit_digital.to_yaml()
+    status_result = StageStatus.PASS
+else:
+    status_result = StageStatus.PENDING 
 
 
-
+if val == 9:
+    display_title("Resultados",status_result)
+    show_results(kit_digital)

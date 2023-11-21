@@ -8,6 +8,9 @@ Variables  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/Test
 
 
 *** Variables ***
+${URL}  https://www.donde-estamos.es/alta-empresa
+# ${WSENDPOINT}  ws://192.168.85.2/playwright_94bacd4d-eb37-4a6d-86a2-54c6724dcb35/ws
+
 ${WORD_FILE}    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/evidencias.docx
 ${SCREENSHOT_DIR}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/directories
 ${localidad_email}  jose.cartilagos@bluepath.es
@@ -15,7 +18,7 @@ ${localidad_password}  pepe1234
 ${province_dondeestamos}  Madrid
 
 
-# ${info_file}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/directories/company.json
+# ${info_file}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueriaes/directories/company.json
 # ${RETURN_FILE}  ${OUTPUT_DIR}${/}return_msg.csv  # columns: 1) ID_EXECUTION, 2) ROBOT, 3) STATUS, 4) EXCEPTION, 5) MESSAGE
 # ${ID_EXECUTION}  0
 # ${email}  jose.cortinas@bluepath.es
@@ -42,9 +45,24 @@ Get Localidad
 
     ${old_timeout}  Set Browser Timeout    60
 
-    Browser.New Browser  chromium  headless=${True}
-    Browser.New Context
-    Browser.New Page  url=https://www.donde-estamos.es/alta-empresa
+    ${variables}  Get Variables
+    ${is_WSENDPOINT}   Evaluate   "\${WSENDPOINT}" in $variables
+    IF  ${is_WSENDPOINT} == True
+        # Para Prod
+        TRY
+            Connect To Browser Over Cdp    ${WSENDPOINT}
+            Go To  ${URL}
+        EXCEPT
+            Connect To Browser    ${WSENDPOINT}
+            New Context  viewport=${None}
+            New Page  ${URL}
+        END
+    ELSE
+        # Para Dev
+        New Browser  chromium  headless=${False}
+        New Context  viewport=${None}
+        New Page  ${URL}
+    END
 
     Run Keyword And Ignore Error  Accept cookies
     Type ${localidad_email} in email usuario
@@ -64,9 +82,24 @@ dondeestamos
 
     ${old_timeout}  Set Browser Timeout    60
 
-    Browser.New Browser  chromium  headless=${True}
-    Browser.New Context
-    Browser.New Page  url=https://www.donde-estamos.es/alta-empresa
+    ${variables}  Get Variables
+    ${is_WSENDPOINT}   Evaluate   "\${WSENDPOINT}" in $variables
+    IF  ${is_WSENDPOINT} == True
+        # Para Prod
+        TRY
+            Connect To Browser Over Cdp    ${WSENDPOINT}
+            Go To  ${URL}
+        EXCEPT
+            Connect To Browser    ${WSENDPOINT}
+            New Context  viewport=${None}
+            New Page  ${URL}
+        END
+    ELSE
+        # Para Dev
+        New Browser  chromium  headless=${False}
+        New Context  viewport=${None}
+        New Page  ${URL}
+    END
 
     Run Keyword And Ignore Error  Accept cookies
     Click on registrarse
@@ -115,7 +148,8 @@ dondeestamos
     
     Go To  ${url_result}
     Run Keyword And Ignore Error  Wait Until Network Is Idle
-    Take Screenshot  fullPage=${True}  filename=${SCREENSHOT_DIR}${/}dondeestamos.png
+    Run Keyword And Ignore Error  Scroll To Element    //*h4*[contains(text(),'${company_name}')]
+    Take Screenshot  filename=${SCREENSHOT_DIR}${/}dondeestamos.png
     
     Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Donde estamos: ${url_result}   ${SCREENSHOT_DIR}${/}dondeestamos.png
     Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},dondeestamos,PASS,,URL:${url_result}|SCREENSHOT:${SCREENSHOT_DIR}${/}dondeestamos.png${\n}
@@ -142,7 +176,14 @@ Click on login
 Get Localidad from ${province_dondeestamos}
     [Tags]  no_record
     Browser.Click  //*[@id='business_city']/../span[1]
-    Sleep  1
+    FOR  ${i}  IN RANGE  5
+        TRY
+            Wait For Elements State    //*[@id='business_city']/../span[1]//span[@aria-expanded='true']  visible  1s
+            BREAK
+        EXCEPT
+            Browser.Click  //*[@id='business_city']/../span[1] 
+        END
+    END
     Browser.Keyboard Input    type    ${province_dondeestamos}
     Wait For Elements State    //ul[@id='select2-business_city-results']//*[contains(text(),'Buscando')]  visible
     Wait For Elements State    //ul[@id='select2-business_city-results']//*[contains(text(),'Buscando')]  hidden

@@ -7,9 +7,12 @@ Variables     /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/T
 
 
 *** Variables ***
+${URL}  https://www.callupcontact.com/active/register/register.php?
+# ${WSENDPOINT}  # ws://localhost:9222/devtools/browser/1b5b309b37e0231099f023aa9e96de0b
+
 ${CAPTCHA_API_KEY}  1b5b309b37e0231099f023aa9e96de0b
-${WORD_FILE}    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/evidencias.docx
-${SCREENSHOT_DIR}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/directories
+# ${WORD_FILE}    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/evidencias.docx
+# ${SCREENSHOT_DIR}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueria.es/directories
 
 # ${info_file}  /tmp/last_company_k2.json
 # ${email}  ventcal@bluepath.es
@@ -32,10 +35,25 @@ ${country}  Spain  # English
 *** Test Cases ***
 callupcontact
     [Tags]  callupcontact
-    
-    Browser.New Browser  chromium  headless=${True}
-    Browser.New Context
-    Browser.New Page  url=https://www.callupcontact.com/active/register/register.php?
+
+    ${variables}  Get Variables
+    ${is_WSENDPOINT}   Evaluate   "\${WSENDPOINT}" in $variables
+    IF  ${is_WSENDPOINT} == True
+        # Para Prod
+        TRY
+            Connect To Browser Over Cdp    ${WSENDPOINT}
+            Go To  ${URL}
+        EXCEPT
+            Connect To Browser    ${WSENDPOINT}
+            New Context  viewport=${None}
+            New Page  ${URL}
+        END
+    ELSE
+        # Para Dev
+        New Browser  chromium  headless=${False}
+        New Context  viewport=${None}
+        New Page  ${URL}
+    END
 
     Write ${name} at Name   ${name}
     Write ${email} at Email  ${email}
@@ -53,15 +71,16 @@ callupcontact
     Click at find address
     Click at Next
 
-    ${url}  Get Href of Work Group
-    Log  Empresa ${company_name} creada en ${url}  console=${True}
+    ${url_result}  Get Href of Work Group
+    Log  Empresa ${company_name} creada en ${url_result}  console=${True}
     
-    Go To  ${url}
+    Go To  ${url_result}
     Run Keyword And Ignore Error  Wait Until Network Is Idle
-    Take Screenshot  fullPage=${True}  filename=${SCREENSHOT_DIR}${/}callupcontact.png
+    Run Keyword And Ignore Error    Scroll To Element    //h1
+    Take Screenshot  filename=${SCREENSHOT_DIR}${/}callupcontact.png
     
-    Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Callupcontact: ${url}    ${SCREENSHOT_DIR}${/}callupcontact.png
-    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},callupcontact,PASS,,URL:${url}|SCREENSHOT:${SCREENSHOT_DIR}${/}callupcontact.png${\n}
+    Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Callupcontact: ${url_result}    ${SCREENSHOT_DIR}${/}callupcontact.png
+    Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},callupcontact,PASS,,URL:${url_result}|SCREENSHOT:${SCREENSHOT_DIR}${/}callupcontact.png${\n}
 
 
 *** Keywords ***
@@ -123,5 +142,5 @@ Click at Next
     Browser.Click    xpath=(//input[@name="update"])[2]
 
 Get Href of Work Group
-    ${url}  Get Attribute    (//tr[contains(.,"Work")])[last()]//a    href
-    RETURN  https://www.callupcontact.com/${url}
+    ${url_result}  Get Attribute    (//tr[contains(.,"Work")])[last()]//a    href
+    RETURN  https://www.callupcontact.com/${url_result}
