@@ -47,7 +47,7 @@ def destroy_browser(id_):
 def switch_to_chromium_server(
         browser: ChromeServer, 
         options: dict = {
-            "headless": True,
+            "headless": False,
             "wsPath": 'ws'
         }
     ):
@@ -175,7 +175,7 @@ def get_browser(
     return kit_digital
     
 
-def show_browser(kit_digital: KitDigital, stage: StageType) -> KitDigital:
+def show_browser(kit_digital: KitDigital, view_only: bool = False) -> KitDigital:
     if not kit_digital.chrome_server:
         kit_digital = get_browser(kit_digital)
         assert kit_digital.chrome_server, "No se ha podido obtener el navegador."
@@ -183,6 +183,8 @@ def show_browser(kit_digital: KitDigital, stage: StageType) -> KitDigital:
     # Get vnc_url from response
     vnc_url = kit_digital.chrome_server.novnc_endpoint + \
         "&password=vscode&autoconnect=true&resize=scale&reconnect=true"
+    if view_only:
+        vnc_url += "&view_only=true&show_dot=true"
     components.iframe(vnc_url, height=600, scrolling=True)
 
     return kit_digital

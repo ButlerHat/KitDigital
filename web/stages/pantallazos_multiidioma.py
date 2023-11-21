@@ -166,7 +166,7 @@ def get_pantallazos_multiidioma(kit_digital: KitDigital) -> KitDigital:
     kit_digital.to_yaml()
 
     kit_digital = remote_browser.get_browser(kit_digital, remote_browser.ChromeType.CDP, 'maximize')
-    remote_browser.show_browser(kit_digital, StageType.PANTALLAZOS_MULTIIDIOMA)
+    remote_browser.show_browser(kit_digital, view_only=False)
     asyncio.run(run_robot(kit_digital))  # Here store kit digital to yaml
 
     # Refresh kit digital

@@ -110,6 +110,8 @@ def get_pantallazos_urls(kit_digital: KitDigital) -> KitDigital:
     
     # Get Browser
     kit_digital = remote_browser.get_browser(kit_digital, ChromeType.CDP, 'maximize')
+    # Show browser
+    kit_digital = remote_browser.show_browser(kit_digital, view_only=True)
     # Run robot
     asyncio.run(run_robot(kit_digital))  # Here store kit digital to yaml
 

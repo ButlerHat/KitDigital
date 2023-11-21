@@ -122,6 +122,8 @@ def get_headers(kit_digital: KitDigital) -> KitDigital:
             is_submitted = True
     if is_submitted:
         kit_digital = remote_browser.get_browser(kit_digital, ChromeType.PLAYWRIGHT)
+        st.info("Esta pantalla es solo de visualización.")
+        kit_digital = remote_browser.show_browser(kit_digital, view_only=True)
         run_robot(kit_digital, url)  # Here store kit digital to yaml
 
     # Refresh kit digital

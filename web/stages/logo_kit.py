@@ -91,7 +91,7 @@ def get_logo_kit(kit_digital: KitDigital) -> KitDigital:
 
     # Get Browser
     kit_digital = remote_browser.get_browser(kit_digital, ChromeType.CDP)
-    kit_digital = remote_browser.show_browser(kit_digital, StageType.LOGO_KIT_DIGITAL)
+    kit_digital = remote_browser.show_browser(kit_digital, view_only=False)
     asyncio.run(run_robot(kit_digital))  # Here store kit digital to yaml
     
     # Check if pass

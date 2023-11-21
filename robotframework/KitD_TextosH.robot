@@ -34,9 +34,12 @@ Obtener Textos de Encabezados
     END
 
     wait until network is idle
+    ${old_timeout}  Set Browser Timeout    5
     ${h1_elements}=    Get Elements    xpath=//h1
     ${h2_elements}=    Get Elements    xpath=//h2
     ${h3_elements}=    Get Elements    xpath=//h3
+    Set Browser Timeout    ${old_timeout}
+    
     FOR    ${element}    IN    @{h1_elements}
         Scroll To Element    ${element}
         Sleep  1

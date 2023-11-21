@@ -123,7 +123,7 @@ def accept_cookies(kit_digital: KitDigital) -> KitDigital:
     # Get Browser
     kit_digital = remote_browser.get_browser(kit_digital, ChromeType.CDP)
     # Show browser
-    kit_digital = remote_browser.show_browser(kit_digital, StageType.ACCEPT_COOKIES)
+    kit_digital = remote_browser.show_browser(kit_digital, view_only=False)
     asyncio.run(run_robot(kit_digital))  # Here store kit digital to yaml
 
     # Refresh kit digital
