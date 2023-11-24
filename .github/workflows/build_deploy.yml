@@ -11,6 +11,14 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
+    - name: Install Git LFS
+      run: |
+        sudo apt-get install git-lfs
+        git lfs install
+
+    - name: Pull LFS files
+      run: git lfs pull
+
     - name: Set prod devcontainer
       run: |
         cp .devcontainer/prod/devcontainer.json .devcontainer/
