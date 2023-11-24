@@ -2,12 +2,14 @@
 from fpdf import FPDF
 from PIL import Image
 from docx import Document
+from docx.shared import Inches
+from docx.enum.text import WD_BREAK
 
 
 def convert_img_to_pdf(image_path: str, output_path: str):
-    # A4 dimensions in pixels at 96 DPI
-    a4_width_px = 794  # Approximately 210mm in inches
-    a4_height_px = 1123  # Approximately 297mm in inches
+    # A4 dimensions in pixels at 300 DPI for higher resolution
+    a4_width_px = 2480  # Approximately 210mm in inches
+    a4_height_px = 3508  # Approximately 297mm in inches
 
     # Margins in pixels (5% of the A4 width on each side)
     margin_px = a4_width_px * 0.05
@@ -19,7 +21,12 @@ def convert_img_to_pdf(image_path: str, output_path: str):
         new_width = a4_width_px - 2 * margin_px
         new_height = new_width / img_ratio
 
-        # Resize the image
+        # Check if the new height is not greater than A4 height
+        if new_height > (a4_height_px - 2 * margin_px):
+            new_height = a4_height_px - 2 * margin_px
+            new_width = new_height * img_ratio
+
+        # Resize the image with high quality resampling filter
         img_resized = img.resize((int(new_width), int(new_height)), Image.LANCZOS)
 
         # Create a blank A4 white image
@@ -43,6 +50,58 @@ def convert_img_to_pdf(image_path: str, output_path: str):
 
     # Save the PDF file with margins
     pdf_with_margins.output(output_path)
+
+
+def append_text_and_picture_to_document(filename, identificador, text, picture, width_inches: float=6.0):
+    doc = Document(filename)
+    
+    if not identificador:
+        doc.add_paragraph()
+        if text:
+            doc.add_paragraph(text)
+        if picture:
+            doc.add_picture(picture, width=Inches(width_inches))
+        doc.save(filename)
+        return
+
+    finded = False
+    for paragraph in doc.paragraphs:
+        for run in paragraph.runs:
+            if identificador in run.text:
+                # Split the text at the identifier
+                pre_text, post_text = run.text.split(identificador, 1)
+                
+                # Update the current run with the text before the identifier
+                run.text = pre_text
+                
+                # If there is a picture to add, insert it in a new run
+                if picture:
+                    # Adding a new paragraph for the picture
+                    pic_paragraph = paragraph.insert_paragraph_before()
+                    if text:
+                        pic_run = pic_paragraph.add_run(text)
+                        pic_run.add_break(WD_BREAK.LINE)
+                    else:
+                        pic_run = pic_paragraph.add_run()
+                    pic_run.add_picture(picture, width=Inches(width_inches))
+                else:
+                    if text:
+                        run.add_run(text)
+                        run.add_break(WD_BREAK.LINE)
+                
+                # Add a new run after the picture with the identifier and any text following it
+                paragraph.add_run(identificador + post_text)
+                
+                finded = True
+                break  # Asumimos que hay un solo identificador por párrafo
+        
+        if finded:
+            break  # No need to check other paragraphs once found
+
+    if not finded:
+        raise AssertionError(f"No se ha encontrado el identificador {identificador} en el documento {filename}")
+
+    doc.save(filename)
 
 
 

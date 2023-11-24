@@ -3,12 +3,14 @@ import asyncio
 import json
 import os
 import random
+from typing import List
 import pandas as pd
 import numpy as np
 import streamlit as st
 import utils.robot_handler as robot_handler
 import utils.remote_browser as remote_browser
-from kitdigital import KitDigital, Stage, StageStatus, StageType
+import utils.pdf_utils as pdf_utils
+from kitdigital import Directory, KitDigital, Stage, StageStatus, StageType
 from utils.notifications import send_contact_to_ntfy
 
 
@@ -277,6 +279,15 @@ def callback_robot(ret_val: int | None, result_path: str, kwargs_callbacks: dict
             elif "SCREENSHOT" in output:
                 kit_digital.stages[stage].info["screenshot"] = output.split(":")[1].strip()
         
+        # Append to directories array in DIRECTORIES stage
+        kit_digital.stages[StageType.DIRECTORIES].info["directories"].append(
+            Directory(
+                name=kit_digital.stages[stage].name,
+                url=kit_digital.stages[stage].info["url"],
+                screenshot=kit_digital.stages[stage].info["screenshot"]
+            )
+        )
+        
         # Update stage
         kit_digital.stages[stage].status = StageStatus.PASS
 
@@ -472,9 +483,44 @@ def get_dondeestamos_localidad(kit_digital: KitDigital) -> tuple[KitDigital, str
         st.stop()
 
     return kit_digital, st.session_state.dondeestamos_province  # type: ignore
+
+def support_legacy_directories(kit_digital: KitDigital) -> KitDigital:
+    directories_: List[Directory] = kit_digital.stages[StageType.DIRECTORIES].info.get("directories", [])
+    if kit_digital.stages[StageType.CALLUPCONTACT].status == StageStatus.PASS:
+        # Append if not exists
+        if not any(x["url"] == kit_digital.stages[StageType.CALLUPCONTACT].info["url"] for x in directories_):
+            kit_digital.stages[StageType.DIRECTORIES].info["directories"].append(
+                Directory(
+                    name=kit_digital.stages[StageType.CALLUPCONTACT].name,
+                    url=kit_digital.stages[StageType.CALLUPCONTACT].info["url"],
+                    screenshot=kit_digital.stages[StageType.CALLUPCONTACT].info["screenshot"]
+                )
+            )
+    if kit_digital.stages[StageType.DONDEESTAMOS].status == StageStatus.PASS:
+        # Append if not exists
+        if not any(x["url"] == kit_digital.stages[StageType.DONDEESTAMOS].info["url"] for x in directories_):
+            kit_digital.stages[StageType.DIRECTORIES].info["directories"].append(
+                Directory(
+                    name=kit_digital.stages[StageType.DONDEESTAMOS].name,
+                    url=kit_digital.stages[StageType.DONDEESTAMOS].info["url"],
+                    screenshot=kit_digital.stages[StageType.DONDEESTAMOS].info["screenshot"]
+                )
+            )
+    if kit_digital.stages[StageType.TRAVELFUL].status == StageStatus.PASS:
+        # Append if not exists
+        if not any(x["url"] == kit_digital.stages[StageType.TRAVELFUL].info["url"] for x in directories_):
+            kit_digital.stages[StageType.DIRECTORIES].info["directories"].append(
+                Directory(
+                    name=kit_digital.stages[StageType.TRAVELFUL].name,
+                    url=kit_digital.stages[StageType.TRAVELFUL].info["url"],
+                    screenshot=kit_digital.stages[StageType.TRAVELFUL].info["screenshot"]
+                )
+            )
+    return kit_digital
     
 
 def directories(kit_digital: KitDigital) -> KitDigital:
+    st.markdown("## Añadir directorio automáticamente")
     st.info("Ejecuta tantas veces como sea necesario este paso, solo se subirán las páginas que no estén subidas.")
     
     # Create Urls Stage
@@ -518,9 +564,66 @@ def directories(kit_digital: KitDigital) -> KitDigital:
             stage.info["error"] = "Fallo robotframework."
             kit_digital.stages[StageType.DIRECTORIES] = stage
             kit_digital.to_yaml()
-        else:
-            stage.status = StageStatus.PASS
-            kit_digital.stages[StageType.DIRECTORIES] = stage
+        
+        if len(kit_digital.stages[StageType.DIRECTORIES].info["directories"]) >= 3:
+            kit_digital.stages[StageType.DIRECTORIES].status = StageStatus.PASS
+            kit_digital.to_yaml()
+
+    return kit_digital
+
+
+def add_directory_manually(kit_digital: KitDigital) -> KitDigital:
+    # Create a form to upload a directory name, url and screenshot
+    st.markdown("### Añadir directorio manualmente")
+    
+    with st.form("Añadir directorio manualmente"):
+        directory_name = st.text_input("Nombre del directorio")
+        directory_url = st.text_input("Url del directorio")
+        directory_screenshot = st.file_uploader("Pantallazo del directorio", type=["png", "jpg", "jpeg"])
+        if st.form_submit_button("Enviar"):
+            # Check if directory_name is empty
+            if directory_name == "":
+                st.warning("El nombre del directorio no puede estar vacío.")
+                return kit_digital
+
+            # Check if directory_url is empty
+            if directory_url == "":
+                st.warning("La url del directorio no puede estar vacía.")
+                return kit_digital
+
+            # Check if directory_screenshot is empty
+            if directory_screenshot is None:
+                st.warning("El pantallazo del directorio no puede estar vacío.")
+                return kit_digital
+
+            # Check if directory_screenshot is image
+            if directory_screenshot.type not in ["image/png", "image/jpg", "image/jpeg"]:
+                st.warning("El pantallazo del directorio debe ser una imagen.")
+                return kit_digital
+
+            # Save directory_screenshot
+            directory_screenshot_path = os.path.join(kit_digital.stages[StageType.DIRECTORIES].results_path, f"{directory_name}.png")
+            with open(directory_screenshot_path, 'wb') as f:
+                f.write(directory_screenshot.read())
+
+            # Save directory in info
+            kit_digital.stages[StageType.DIRECTORIES].info["directories"].append(
+                Directory(
+                    name=directory_name,
+                    url=directory_url,
+                    screenshot=directory_screenshot_path
+                )
+            )
+            pdf_utils.append_text_and_picture_to_document(
+                kit_digital.word_file,
+                '{PANTALLAZOS_DIRECTORIOS}',
+                f'{directory_name} - {directory_url}',
+                directory_screenshot_path
+            )
+            
+            if len(kit_digital.stages[StageType.DIRECTORIES].info["directories"]) >= 3:
+                kit_digital.stages[StageType.DIRECTORIES].status = StageStatus.PASS
+            
             kit_digital.to_yaml()
 
     return kit_digital

@@ -61,7 +61,10 @@ Se ha creado y dado de alta la página web en Bing Webmaster Tools: ({bing_webma
             multiidioma = """
 Hemos instalado el plugin en WordPress de traducción TranslatePress - Multilingual. Se agregó como idioma principal castellano, además un segundo idioma inglés (UK).
 """
-
+            if len(keywords.split(",")) < 5:
+                # Add empty keywords until 5
+                keywords += ", " * (5 - len(keywords.split(",")))
+            
             kit_digital.stages[StageType.SEO_BASICO].status = StageStatus.PASS
             kit_digital.stages[StageType.SEO_BASICO].info = {
                 "company_name": company_name,

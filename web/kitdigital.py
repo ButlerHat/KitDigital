@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import os
 from enum import Enum
+from typing import TypedDict
 import yaml
 import streamlit as st
 
@@ -87,6 +88,7 @@ class ChromeType(Enum):
     """
     CDP = "CDP"
     PLAYWRIGHT = "PLAYWRIGHT"
+    EMPTY = "EMPTY"
 
     def __str__(self):
         return f"ChromeType: {self.value}"
@@ -96,6 +98,12 @@ class ChromeType(Enum):
     
     def __eq__(self, other):
         return hash(self) == hash(other)
+    
+
+class Directory(TypedDict):
+    name: str
+    url: str
+    screenshot: str
 
 
 @dataclass
@@ -143,8 +151,8 @@ class KitDigital:
             StageType.CRAWL_URLS: Stage("Obtención De Urls", os.path.join(self.results_path, "urls")),
             StageType.SELECT_URLS: Stage("Selección De Urls", os.path.join(self.results_path, "select_urls")),
             StageType.DIRECTORIES: Stage("Subida a Directorios", os.path.join(self.results_path, "directories")),
-            StageType.CALLUPCONTACT: Stage("Call Up Contact", os.path.join(self.results_path, "callupcontact")),
-            StageType.DONDEESTAMOS: Stage("Donde Estamos", os.path.join(self.results_path, "dondeestamos")),
+            StageType.CALLUPCONTACT: Stage("Callupcontact", os.path.join(self.results_path, "callupcontact")),
+            StageType.DONDEESTAMOS: Stage("Donde-Estamos", os.path.join(self.results_path, "dondeestamos")),
             StageType.TRAVELFUL: Stage("Travelful", os.path.join(self.results_path, "travelful")),
             StageType.SEO_BASICO: Stage("SEO Básico", os.path.join(self.results_path, "seo_basico")),
             StageType.HEADERS_SEO: Stage("Headers SEO", os.path.join(self.results_path, "headers_seo")),

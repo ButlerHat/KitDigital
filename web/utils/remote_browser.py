@@ -1,14 +1,23 @@
-from typing import Literal
 import requests
 import asyncio
+from typing import Literal
 import streamlit as st
-from kitdigital import ChromeType, KitDigital, StageType, ChromeServer
+from kitdigital import ChromeType, KitDigital, ChromeServer
 import utils.robot_handler as robot_handler
 import streamlit.components.v1 as components
 
 
-BASE_URL = "http://api-chrome.paipaya.com"
+BASE_URL = st.secrets.urls.orchestrator
+# BASE_URL = "http://192.168.85.2:31371"  # Kubernetes NodePort to send files greater than 100MB
 # BASE_URL = "http://localhost:8000"
+
+def _remove_toolbar(utils_endpoint: str):
+    config_data = [
+        "session.screen0.toolbar.visible: false"
+    ]
+    response = requests.post(utils_endpoint + "/change-fluxbox-config", json=config_data)
+    return response
+
 
 def create_chromium_server(options: dict = {}):
     """Sends a request to create a new browser instance."""
@@ -91,87 +100,93 @@ def get_browser(
         chrome_type: ChromeType = ChromeType.CDP, 
         maximize_or_full: Literal['maximize', 'full'] = 'maximize'
     ) -> KitDigital:
-    
     """Get the browser and show it in an iframe."""
+    
+    # Configure options
     cdp_args = [
       "--start-fullscreen"
     ] if maximize_or_full == "full" else [
       "--start-maximized"
     ]
 
-    if kit_digital.chrome_server and kit_digital.chrome_server.chrome_type != chrome_type:
-        with st.spinner("Cambiando de navegador... Espere unos segundos."):
+    playwright_options = {
+        "headless": False,
+        "args": [
+            "--start-maximized",
+        ]
+    } if maximize_or_full == "full" else {
+        "headless": False
+    }
+
+    try:
+        # Check if browser and is alive
+        if kit_digital.chrome_server and kit_digital.chrome_server.chrome_type == chrome_type:
+            # Is docker?
+            res = requests.get(f"{BASE_URL}/is-alive/{kit_digital.chrome_server.id_}")
+            if not res.status_code == 200:
+                kit_digital.chrome_server = None
+            else:
+                # Is browser alive?
+                ret_val = asyncio.run(robot_handler.run_robot(
+                    "health_check",
+                    [f'WSENDPOINT:"{kit_digital.chrome_server.playwright_endpoint}"'],
+                    "healthcheck.robot",
+                    msg_info="Comprobando que el navegador está vivo..."
+                ))
+                if ret_val != 0:
+                    kit_digital.chrome_server = None
+                else:
+                    return kit_digital
+        
+        # If not docker
+        if not kit_digital.chrome_server:
+            with st.spinner("Creando máquina virtual... Esto puede tardar unos segundos."):
+                # First create a docker
+                response = create_chromium_server()
+                # Check if response is ok
+                if "id_" not in response or "novnc_endpoint" not in response or "playwright_endpoint" not in response:
+                    raise Exception("No se ha podido crear el navegador. No hay id_ o novnc_endpoint en la respuesta.")
+
+                # Remove toolbar. This will remove the toolbar but browser will close
+                _remove_toolbar(response["utils_endpoint"])
+
+                kit_digital.chrome_server = ChromeServer(
+                    **response, 
+                    chrome_type=ChromeType.EMPTY
+                )
+
+        # Now open the browser with options and args
+        assert kit_digital.chrome_server, "No se ha podido obtener el navegador."
+
+        with st.spinner("Abriendo navegador... Espere unos segundos."):
             if chrome_type == ChromeType.PLAYWRIGHT:
                 try:
-                    response = switch_to_chromium_server(kit_digital.chrome_server)
+                    response = switch_to_chromium_server(kit_digital.chrome_server, options=playwright_options)
                     kit_digital.chrome_server = ChromeServer(**response, chrome_type=chrome_type)
                     kit_digital.to_yaml()
-                    return kit_digital
                 except Exception as e:
-                    # Try to create new
-                    kit_digital.chrome_server = None
+                    raise Exception("El navegador de playwright no ha podido abrirse.")
             elif chrome_type == ChromeType.CDP:
                 try:
                     response = switch_to_chrome_cdp(kit_digital.chrome_server, args=cdp_args)
                     kit_digital.chrome_server = ChromeServer(**response, chrome_type=chrome_type)
                     kit_digital.to_yaml()
-                    return kit_digital
                 except Exception as e:
-                    # Try to create new
-                    kit_digital.chrome_server = None
+                    raise Exception("El navegador de cdp no ha podido abrirse.")
             else:
                 raise Exception("Tipo de navegador no soportado.")
 
-    # Check if browser is alive
-    if kit_digital.chrome_server:
-        res = requests.get(f"{BASE_URL}/is-alive/{kit_digital.chrome_server.id_}")
-        if not res.status_code == 200:
-            kit_digital.chrome_server = None
-        else:
-            # Do health check with robot
-            ret_val = asyncio.run(robot_handler.run_robot(
-                "health_check",
-                [f'WSENDPOINT:"{kit_digital.chrome_server.playwright_endpoint}"'],
-                "healthcheck.robot",
-                msg_info="Comprobando que el navegador está vivo..."
-            ))
-            if ret_val != 0:
-                kit_digital.chrome_server = None
-        
-    if not kit_digital.chrome_server:
-        try:
-            with st.spinner("Creando navegador... Esto puede tardar unos segundos."):
-                if chrome_type == ChromeType.PLAYWRIGHT:
-                    response = create_chromium_server()
-                elif chrome_type == ChromeType.CDP:
-                    response = create_chrome_cdp(args=cdp_args)
-                else:
-                    raise Exception("Tipo de navegador no soportado.")
-                
-            if "id_" not in response or "novnc_endpoint" not in response or "playwright_endpoint" not in response:
-                raise Exception("No se ha podido crear el navegador. No hay id_ o novnc_endpoint en la respuesta.")
-        except Exception as e:
-            requests.post(
-                "https://notifications.paipaya.com/kit_digital_fail",
-                headers={
-                    "X-Email": "paipayainfo@gmail.com",
-                    "Tags": "warning"
-                },
-                data=f"KitDigital: Error al obtener un navegor: {e}"
-            )
-            return kit_digital
-        
-        # Get id_ from response
-        chrome_server = ChromeServer(
-            id_ = response["id_"],
-            novnc_endpoint = response["novnc_endpoint"],
-            playwright_endpoint = response["playwright_endpoint"],
-            utils_endpoint = response["utils_endpoint"],
-            chrome_type = chrome_type
+    except Exception as e:
+        requests.post(
+            "https://notifications.paipaya.com/kit_digital_fail",
+            headers={
+                "X-Email": "paipayainfo@gmail.com",
+                "Tags": "warning"
+            },
+            data=f"KitDigital: Error al obtener un navegor: {e}"
         )
-        kit_digital.chrome_server = chrome_server
-        kit_digital.to_yaml()
-    
+        raise Exception("No se ha podido obtener el navegador: " + str(e))
+
     return kit_digital
     
 

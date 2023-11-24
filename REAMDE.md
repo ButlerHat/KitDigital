@@ -1,6 +1,12 @@
 # Kit Digital Deploy with Github Actions
 
-Need to create a secret of cloudflare tunnel
+### Requirements
+
+- The container need to see the orchestrator with name `http://api-orchestrator-service:8000` (change in web/.streamlit/secrets.prod.toml). This is due to cloudflare tunnels. Can't upload a file greater than 100MB and in this proyect we send files to orchestrator.
+
+
+
+- Need to create a secret of cloudflare tunnel
 
 ```yaml
 apiVersion: v1

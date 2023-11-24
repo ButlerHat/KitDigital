@@ -59,6 +59,7 @@ async def run_robot(kit_digital: KitDigital):
             kwargs_callbacks={"kit_digital": kit_digital},
             msg_info=f"Obteniendo el pantallazo del logo del kit digital {kit_digital.url}"
         )
+        st.success('Centra el logo ahora')
         pl_warining.empty()
         st.session_state["executing_logo"] = True
 

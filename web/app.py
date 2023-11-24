@@ -1,8 +1,10 @@
+from typing import List
+import requests
 import streamlit as st
 import utils.remote_browser as remote_browser
 import extra_streamlit_components as stx
 from stages.accept_cookies import accept_cookies
-from stages.directories import directories
+from stages.directories import directories, add_directory_manually, support_legacy_directories
 from stages.crawl_urls import crawl_urls, select_urls
 from stages.seo_basico import set_seo_basico
 from stages.headers import get_headers
@@ -10,7 +12,7 @@ from stages.logo_kit import get_logo_kit
 from stages.pantallazos_urls import get_pantallazos_urls
 from stages.pantallazos_multiidioma import get_pantallazos_multiidioma
 from stages.results import show_results
-from kitdigital import KitDigital, Stage, StageStatus, StageType
+from kitdigital import Directory, KitDigital, Stage, StageStatus, StageType
 
 
 # Probar con: https://djadelpeluqueria.es/
@@ -71,6 +73,15 @@ def get_create_kit_digital() -> KitDigital:
 
             if not kit_d:
                 kit_d = KitDigital(url)
+                requests.post(
+                    "https://notifications.paipaya.com/kit_digital",
+                    headers={
+                        "X-Email": "paipayainfo@gmail.com",
+                        "Tags": "white_check_mark"
+                    },
+                    data=f"Nuevo Kit: {url}.",
+                    timeout=15
+                )
 
     if not kit_d:
         st.stop()
@@ -190,25 +201,29 @@ if val == 2:
     col1, col2 = st.columns([4, 1])
     with col1:
         display_title("Subir directorios", kit_digital.stages[StageType.DIRECTORIES].status)
+    if not "directories" in kit_digital.stages[StageType.DIRECTORIES].info:
+        kit_digital.stages[StageType.DIRECTORIES].info["directories"] = []
+    kit_digital = support_legacy_directories(kit_digital)
+    st.markdown("## Añadir directorio manualmente")
+    with st.expander("Añadir directorio manualmente", expanded=False):
+        kit_digital = add_directory_manually(kit_digital)
     # Directories
-    if kit_digital.stages[StageType.DIRECTORIES].status != StageStatus.PASS:
+    if kit_digital.stages[StageType.CALLUPCONTACT].status != StageStatus.PASS or \
+        kit_digital.stages[StageType.DONDEESTAMOS].status != StageStatus.PASS or \
+        kit_digital.stages[StageType.TRAVELFUL].status != StageStatus.PASS:
         kit_digital = directories(kit_digital)
-        if kit_digital.stages[StageType.DIRECTORIES].status == StageStatus.PASS:
+        if kit_digital.stages[StageType.CALLUPCONTACT].status == StageStatus.PASS and \
+            kit_digital.stages[StageType.DONDEESTAMOS].status == StageStatus.PASS and \
+            kit_digital.stages[StageType.TRAVELFUL].status == StageStatus.PASS:
             st.rerun()
 
     # Show directories
-    if kit_digital.stages[StageType.DIRECTORIES].status == StageStatus.PASS:
-        st.markdown("### Callupcontact")
-        with st.expander("Evidencia Callupcontact", expanded=False):
-            st.image(kit_digital.stages[StageType.CALLUPCONTACT].info["screenshot"])
-        
-        st.markdown("### Donde estamos")
-        with st.expander("Evidencia Donde estamos", expanded=False):
-            st.image(kit_digital.stages[StageType.DONDEESTAMOS].info["screenshot"])
-        
-        st.markdown("### Travelful")
-        with st.expander("Evidencia Travelful", expanded=False):
-            st.image(kit_digital.stages[StageType.TRAVELFUL].info["screenshot"])
+    directories_: List[Directory] = kit_digital.stages[StageType.DIRECTORIES].info.get("directories", [])
+    for directory in directories_:
+        with st.expander(f"{directory['name']}"):
+            st.markdown(f"### {directory['name']}")
+            st.markdown(f"URL: {directory['url']}")
+            st.image(directory["screenshot"])
 
 if val == 3:
     # SEO Basico
@@ -264,7 +279,17 @@ if val == 5:
 
     # Show Acreditacion cumplimiento en materia de publicidad
     if kit_digital.stages[StageType.LOGO_KIT_DIGITAL].status == StageStatus.PASS:
-        st.image(kit_digital.stages[StageType.LOGO_KIT_DIGITAL].info["screenshot"])
+        st.markdown('### Descargar imagen')
+        col1, col2, _ = st.columns([1, 2, 1])
+        col2.image(kit_digital.stages[StageType.LOGO_KIT_DIGITAL].info["screenshot"])
+        with open(kit_digital.stages[StageType.LOGO_KIT_DIGITAL].info["screenshot"], "rb") as f:
+            col1.download_button(
+                label="Descargar imagen",
+                data=f,
+                file_name="pantallazo_logo.png",
+                mime="image/png",
+            )
+        st.markdown('### Descargar documento pdf')
         with open(kit_digital.stages[StageType.LOGO_KIT_DIGITAL].info["pdf"], "rb") as f:
             st.download_button(
                 label="Descargar documento",

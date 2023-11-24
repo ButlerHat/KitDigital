@@ -94,6 +94,7 @@ async def run_robot(kit_digital: KitDigital):
             msg_info=f"Acepta las cookies en la página: {kit_digital.url}",
             include_tags=["1"]
         )
+        st.success('Accepta las cookies ahora')
         st.session_state["executing_cookies"] = True
 
 

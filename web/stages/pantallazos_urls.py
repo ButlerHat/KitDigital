@@ -84,6 +84,7 @@ async def run_robot(kit_digital: KitDigital):
     args = [
         f'WSENDPOINT:"{kit_digital.chrome_server.playwright_endpoint}"',
         f'UTILS_ENDPOINT:"{kit_digital.chrome_server.utils_endpoint}"',
+        f'ORCHESTRATOR_ENDPOINT:"{st.secrets.urls.orchestrator}"',
         f'COOKIES_DIR:"{kit_digital.cookies_dir}"',
         f'URL:"{kit_digital.url}"',
         f'WORD_FILE:"{kit_digital.word_file}"',

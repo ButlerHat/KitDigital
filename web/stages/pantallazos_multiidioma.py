@@ -43,6 +43,9 @@ def callback_pantallazos(ret_val: int | None, result_path: str, kwargs_callbacks
     # Get the row with id_execution = id_execution. If is empty, return
     df_id = df[df["id_execution"] == np.int64(id_execution)]
     if len(df_id) == 0:
+        df_id = df[df["id_execution"] == str(id_execution)]
+
+    if len(df_id) == 0:
         st.warning("No se ha podido crear el word de recopilacion de evidencias de multiidioma.")
         # Send notification
         url: str = kit_digital.url
@@ -125,6 +128,7 @@ async def run_robot(kit_digital: KitDigital):
                 msg_info="Obteniendo los pantallazos en multi-idioma. Por favor, haz click en el cambio de idioma.",
                 include_tags=["1"]
             )
+            st.success('Cambia ahora el idioma')
             pl_warining.empty()
             st.session_state["executing_screenshots"] = True
         
@@ -147,14 +151,6 @@ async def run_robot(kit_digital: KitDigital):
             st.rerun()
         elif st.session_state["executing_screenshots"]:
             st.stop()
-        
-    # Check if kit_digital is finished. All urls are in PASS
-
-    for info_key, info_value in kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].info['ulrs'].items():
-        
-        kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status = StageStatus.PASS
-        kit_digital.to_yaml()
-        return
 
 
 def get_pantallazos_multiidioma(kit_digital: KitDigital) -> KitDigital:

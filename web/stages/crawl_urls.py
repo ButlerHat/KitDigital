@@ -104,6 +104,9 @@ def crawl_urls(kit_digital: KitDigital) -> KitDigital:
     kit_digital.stages[StageType.CRAWL_URLS] = urls_stage
     kit_digital.to_yaml()
 
+    # Switch browser to playwright
+    kit_digital = remote_browser.get_browser(kit_digital, remote_browser.ChromeType.PLAYWRIGHT)
+
     kit_digital.stages[StageType.CRAWL_URLS].info["url_crawl"] = kit_digital.url
     kit_digital.stages[StageType.CRAWL_URLS].info["filter_ending"] = True
     url_selected = False
