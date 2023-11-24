@@ -119,24 +119,28 @@ def get_browser(
     }
 
     try:
-        # Check if browser and is alive
-        if kit_digital.chrome_server and kit_digital.chrome_server.chrome_type == chrome_type:
-            # Is docker?
-            res = requests.get(f"{BASE_URL}/is-alive/{kit_digital.chrome_server.id_}")
-            if not res.status_code == 200:
-                kit_digital.chrome_server = None
-            else:
-                # Is browser alive?
-                ret_val = asyncio.run(robot_handler.run_robot(
-                    "health_check",
-                    [f'WSENDPOINT:"{kit_digital.chrome_server.playwright_endpoint}"'],
-                    "healthcheck.robot",
-                    msg_info="Comprobando que el navegador está vivo..."
-                ))
-                if ret_val != 0:
+        # Is docker?
+        if kit_digital.chrome_server:
+            with st.spinner("Comprobando máquina virtual..."):
+                res = requests.get(f"{BASE_URL}/is-alive/{kit_digital.chrome_server.id_}")
+                if res.status_code != 200:
                     kit_digital.chrome_server = None
-                else:
-                    return kit_digital
+
+        # Is browser alive and correct type? If not alive, switch browser is enough
+        if kit_digital.chrome_server and kit_digital.chrome_server.chrome_type == chrome_type:
+            ret_val = asyncio.run(robot_handler.run_robot(
+                "health_check",
+                [f'WSENDPOINT:"{kit_digital.chrome_server.playwright_endpoint}"'],
+                "healthcheck.robot",
+                msg_info="Comprobando el navegador..."
+            ))
+            if ret_val != 0:
+                kit_digital.chrome_server.chrome_type = ChromeType.EMPTY
+                kit_digital.to_yaml()
+                kit_digital = get_browser(kit_digital, chrome_type=chrome_type, maximize_or_full=maximize_or_full)
+                return kit_digital
+            else:
+                return kit_digital
         
         # If not docker
         if not kit_digital.chrome_server:
