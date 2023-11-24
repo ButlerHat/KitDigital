@@ -16,8 +16,9 @@ RUN sudo ln -snf $TZ /etc/localtime && echo "Europe/Madrid" > /etc/timezone
 ENV PIP_EXTRA_INDEX_URL=https://$PYPI_USER:$PYPI_PASS@pypiserver.paipaya.com/
 
 # [Optional] Uncomment this section to install additional OS packages.
+RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends poppler-utils ffmpeg libsm6 libxext6 scrot
+    && apt-get -y install --no-install-recommends poppler-utils ffmpeg libsm6 libxext6 scrot git-lfs
 
 # Install chrome
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
