@@ -18,11 +18,12 @@ Library    Collections
 Library    Dialogs
 Library    OperatingSystem
 Library    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/KitD_Pantallazos/word_helper.py
+Library    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/remote_desktop/utils.py
 
 *** Variables ***
-# ${URL}  https://www.djadelpeluquero.com/
+${URL}  https://djadelpeluqueria.es/
 ${WSENDPOINT}  ws://192.168.85.2/playwright_6cfa552a-53e0-4733-914d-5d3785b27018/devtools/browser/2a5daef8-f9fb-4e75-acda-16c557a4f865
-# ${UTILS_ENDPOINT} 
+${UTILS_ENDPOINT} 
 
 ${RETURN_FILE}  ${OUTPUT_DIR}${/}msg.csv
 ${ID_EXECUTION}  0

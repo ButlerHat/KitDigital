@@ -7,7 +7,7 @@ Library    OperatingSystem
 ${url}    https://djadelpeluqueria.es
 ${RETURN_FILE}  ${OUTPUT_DIR}${/}msg.txt
 ${ID_EXECUTION}  0
-# ${is_WSENDPOINT}
+${WSENDPOINT}
 
 
 *** Test Cases ***
@@ -41,22 +41,34 @@ Obtener Textos de Encabezados
     Set Browser Timeout    ${old_timeout}
     
     FOR    ${element}    IN    @{h1_elements}
-        Scroll To Element    ${element}
-        Sleep  1
-        ${text}=    Get Text    ${element}
-        Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},KitD_TextosH,PASS,,"H1 - ${text}"${\n}
+        TRY
+            Run Keyword And Ignore Error  Scroll To Element    ${element}
+            Sleep  1
+            ${text}=    Get Text    ${element}
+            Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},KitD_TextosH,PASS,,"H1 - ${text}"${\n}
+        EXCEPT
+            Log  No se pudo obtener el texto del elemento.  console=${True}	
+        END
     END
     FOR    ${element}    IN    @{h2_elements}
-        Scroll To Element    ${element}
-        Sleep  1
-        ${text}=    Get Text    ${element}
-        Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},KitD_TextosH,PASS,,"H2 - ${text}"${\n}
+        TRY
+            Run Keyword And Ignore Error  Scroll To Element    ${element}
+            Sleep  1
+            ${text}=    Get Text    ${element}
+            Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},KitD_TextosH,PASS,,"H2 - ${text}"${\n}
+        EXCEPT
+            Log  No se pudo obtener el texto del elemento.  console=${True}
+        END
     END
     FOR    ${element}    IN    @{h3_elements}
-        Scroll To Element    ${element}
-        Sleep  1
-        ${text}=    Get Text    ${element}
-        Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},KitD_TextosH,PASS,,"H3 - ${text}"${\n}
+        TRY
+            Run Keyword And Ignore Error  Scroll To Element    ${element}
+            Sleep  1
+            ${text}=    Get Text    ${element}
+            Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},KitD_TextosH,PASS,,"H3 - ${text}"${\n}
+        EXCEPT
+            Log  No se pudo obtener el texto del elemento.  console=${True}
+        END
     END
     Close Browser
 

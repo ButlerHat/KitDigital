@@ -76,7 +76,10 @@ callupcontact
     
     Go To  ${url_result}
     Run Keyword And Ignore Error  Wait Until Network Is Idle
-    Run Keyword And Ignore Error    Scroll To Element    //h1
+    Set Viewport Size  1920  1080
+    Run Keyword And Ignore Error  Scroll By  vertical=100%
+    Run Keyword And Ignore Error  Scroll To Element  //div[@class='content']
+    Run Keyword And Ignore Error  Scroll By  vertical=-300
     Take Screenshot  filename=${SCREENSHOT_DIR}${/}callupcontact.png
     
     Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Callupcontact: ${url_result}    ${SCREENSHOT_DIR}${/}callupcontact.png

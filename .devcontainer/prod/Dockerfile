@@ -43,6 +43,9 @@ RUN /opt/conda/envs/robotframework/bin/python -m Browser.entry init --skip-brows
 COPY . /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital
 WORKDIR /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital
 
+# Set prod secrets
+RUN rm web/.streamlit/secrets.toml && cp web/.streamlit/secrets.prod.toml web/.streamlit/secrets.toml
+
 # This is needed to avoid permissions errors when clonning with actions
 RUN sudo chown -R $UNAME:$UNAME /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital
 

@@ -1,4 +1,3 @@
-import requests
 from docx import Document
 from docx.shared import Inches
 from docx.enum.text import WD_BREAK
@@ -6,19 +5,6 @@ from docx.enum.text import WD_BREAK
 def create_new_document(filename):
     doc = Document()
     doc.save(filename)
-
-def take_os_screenshot(utils_endpoint: str, output_path: str):
-    """Sends a request to create a new browser instance."""
-
-    response = requests.get(f"{utils_endpoint}/take-screenshot")
-    if response.status_code == 200:
-        # Screenshot in content
-        with open(output_path, "wb") as f:
-            f.write(response.content)
-        print(f"Screenshot taken successfully. {output_path}")
-    else:
-        raise Exception(f"Failed to take screenshot: {response.status_code}, {response.text}")
-
 
 def append_text_and_picture_to_document(filename, identificador, text, picture, width_inches: float=6.0):
     doc = Document(filename)

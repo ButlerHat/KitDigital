@@ -149,7 +149,10 @@ dondeestamos
     Go To  ${url_result}
     Run Keyword And Ignore Error  Wait Until Network Is Idle
     ${old_timeout}  Set Browser Timeout    1
-    Run Keyword And Ignore Error  Scroll To Element    //h4[contains(text(),'${company_name}')]`
+    Set Viewport Size  1920  1080
+    Run Keyword And Ignore Error  Scroll By  vertical=100%
+    Run Keyword And Ignore Error  Scroll To Element  //section[@class='page']
+    Run Keyword And Ignore Error  Scroll By  vertical=-200
     Set Browser Timeout    ${old_timeout}
 
     Take Screenshot  filename=${SCREENSHOT_DIR}${/}dondeestamos.png
