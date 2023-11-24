@@ -20,16 +20,16 @@ Library    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/Test
 Library    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/KitD_Pantallazos/word_helper.py
 
 *** Variables ***
-${url1}    https://djadelpeluqueria.es/
-${url2}    https://djadelpeluqueria.es/blog/
-${url3}    https://djadelpeluqueria.es/servicios/
-${url4}    https://djadelpeluqueria.es/contacto/
-${url5}    https://djadelpeluqueria.es/galeria-de-fotos/
-${url6}    https://djadelpeluqueria.es/acerca-de/
+# ${url1}    https://djadelpeluqueria.es/
+# ${url2}    https://djadelpeluqueria.es/blog/
+# ${url3}    https://djadelpeluqueria.es/servicios/
+# ${url4}    https://djadelpeluqueria.es/contacto/
+# ${url5}    https://djadelpeluqueria.es/galeria-de-fotos/
+# ${url6}    https://djadelpeluqueria.es/acerca-de/
 
-${ORCHESTRATOR_ENDPOINT}  http://192.168.85.2:31371
-${WSENDPOINT}   ws://192.168.85.2/playwright_91c67abc-3841-4d71-9459-85af8902d950/devtools/browser/c8cd64e5-60b6-46a6-a0cd-1eb4c82535de
-${UTILS_ENDPOINT}  https://k8-chrome.paipaya.com/utils_91c67abc-3841-4d71-9459-85af8902d950
+# ${ORCHESTRATOR_ENDPOINT}  http://192.168.85.2:31371
+# ${WSENDPOINT}   ws://192.168.85.2/playwright_91c67abc-3841-4d71-9459-85af8902d950/devtools/browser/c8cd64e5-60b6-46a6-a0cd-1eb4c82535de
+# ${UTILS_ENDPOINT}  https://k8-chrome.paipaya.com/utils_91c67abc-3841-4d71-9459-85af8902d950
 
 ${RETURN_FILE}  ${OUTPUT_DIR}${/}msg.csv
 ${ID_EXECUTION}  0
