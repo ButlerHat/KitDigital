@@ -123,7 +123,7 @@ def get_browser(
         if kit_digital.chrome_server:
             with st.spinner("Comprobando máquina virtual..."):
                 res = requests.get(f"{BASE_URL}/is-alive/{kit_digital.chrome_server.id_}")
-                if res.status_code != 200:
+                if res.status_code != 200 or res.json()["is_alive"] == "false":
                     kit_digital.chrome_server = None
 
         # Is browser alive and correct type? If not alive, switch browser is enough
