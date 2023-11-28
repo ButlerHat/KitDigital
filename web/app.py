@@ -61,12 +61,18 @@ def get_create_kit_digital() -> KitDigital:
             return kit_d
     
     kit_d = None
-    with st.form("Obtener urls"):
-        st.info("La url debe ser la página principal del dominio. Desde esta se navegaran a las demás páginas y se obtendran cabeceras, etc.")
+    placeholder = st.empty()
+    with placeholder.form("Obtener urls"):
+        st.info("La url debe ser la página principal del dominio. Debe contener el prefijo http o https.")
         st.write("Proporciona la url del dominio")
         url = st.text_input("URL")
 
         if st.form_submit_button("Enviar"):
+            # Check if url is valid
+            if not url.startswith("http"):
+                st.error("La url debe empezar por http o https.")
+                st.stop()
+
             st.session_state.url = url
             # Create directory for results for this url
             kit_d = KitDigital.get_kit_digital(url)
@@ -85,6 +91,8 @@ def get_create_kit_digital() -> KitDigital:
 
     if not kit_d:
         st.stop()
+    else:
+        placeholder.empty()
     
     assert kit_d is not None, "No se ha podido crear el kit digital."
     return kit_d
