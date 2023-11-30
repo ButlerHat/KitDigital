@@ -164,12 +164,10 @@ def get_browser(
                 if "id_" not in response or "novnc_endpoint" not in response or "playwright_endpoint" not in response:
                     raise Exception("No se ha podido crear el navegador. No hay id_ o novnc_endpoint en la respuesta.")
 
+            with st.spinner("Configurando resolución."):
                 # Remove toolbar. This will remove the toolbar but browser will close
                 _remove_toolbar(response["utils_endpoint"])
-                time.sleep(1)
                 # Change resolution
-                _change_resolution(response["utils_endpoint"], "1280x720")
-                time.sleep(0.5)
                 _change_resolution(response["utils_endpoint"], "1920x1080")
 
                 kit_digital.chrome_server = ChromeServer(
