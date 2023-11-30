@@ -60,14 +60,14 @@ Get Title Screenshots and versions for URLs
     # Get Resolution of vnc to restore later
     ${current_resolution}  Get Current Resolution    utils_endpoint=${UTILS_ENDPOINT}
     # Set Resolution to 1280x720
-    Change Resolution    ${UTILS_ENDPOINT}    1280x720
+    Change Resolution    ${UTILS_ENDPOINT}    1920x1080
 
     FOR    ${url}    IN    @{urls}
         Open URL and Get Info    ${url}
     END
 
     # Set resolution to 1920x1080
-    Change Resolution    ${UTILS_ENDPOINT}    1920x1080
+    # Change Resolution    ${UTILS_ENDPOINT}    1920x1080
 
     Take Different Version Screenshots    ${urls[0]}
     # Restore resolution
