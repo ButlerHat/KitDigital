@@ -135,6 +135,7 @@ async def run_robot(kit_digital: KitDigital):
         # Put a button and wait for it to be clicked.
         st.markdown("## Cambia el idioma")
         placeholder = st.empty()
+        st.info("Si no aparece la página, reinicia el paso con el botón de arriba a la derecha.")
         if placeholder.button("Realiza el pantallazo"):
             placeholder.empty()
             await robot_handler.run_robot(

@@ -17,3 +17,4 @@ dependencies:
       - pillow  # For image -> pdf
       - fpdf  # For image -> pdf
       - python-docx # Remove placeholders
+      - streamlit-drawable-canvas

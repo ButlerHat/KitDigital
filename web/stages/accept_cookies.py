@@ -99,6 +99,7 @@ async def run_robot(kit_digital: KitDigital):
 
 
     # Put a button and wait for it to be clicked.
+    st.info("Si no aparece la página, reinicia el paso con el botón de arriba a la derecha.")
     st.markdown("## Acepta las cookies en la página")
     placeholder = st.empty()
     if placeholder.button("Guardar cookies"):

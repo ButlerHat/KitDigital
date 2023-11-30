@@ -6,7 +6,7 @@ import extra_streamlit_components as stx
 from stages.accept_cookies import accept_cookies
 from stages.directories import directories, add_directory_manually, support_legacy_directories
 from stages.crawl_urls import crawl_urls, select_urls
-from stages.seo_basico import set_seo_basico
+from stages.seo_basico import set_seo_basico, show_modiffy_results
 from stages.headers import get_headers
 from stages.logo_kit import get_logo_kit
 from stages.pantallazos_urls import get_pantallazos_urls
@@ -24,30 +24,22 @@ def restart_stage(kit_d: KitDigital, stage_type: StageType, optional_stages: lis
     if optional_stages is None:
         optional_stages = []
 
-    restart = st.button("Reiniciar Stage", type='primary')
-    if restart or st.session_state.get(f'ask_{stage_type}', False):
-        if f'ask_{stage_type}' not in st.session_state:
-            st.session_state[f'ask_{stage_type}'] = True
-        if restart:
-            st.session_state[f'ask_{stage_type}'] = True
-        st.warning("¿Estás seguro de que quieres reiniciar esta etapa? Se perderán los datos que hayas introducido.")
-        yes_button = st.button("Sí, reiniciar etapa", type='primary')
-        no_button = st.button("No, no reiniciar etapa")
-        if yes_button:
+    restart = st.button("Reiniciar Paso", type='primary')
+    if restart:
+        st.session_state["executing_cookies"] = False
+        st.session_state["executing_screenshots"] = False
+        st.session_state["executing_logo"] = False
+
+        stage: Stage = kit_d.stages[stage_type]
+        stage.status = StageStatus.PENDING
+        stage.info = {}
+        kit_d.stages[stage_type] = stage
+        for stage_type in optional_stages:
             stage: Stage = kit_d.stages[stage_type]
             stage.status = StageStatus.PENDING
             stage.info = {}
             kit_d.stages[stage_type] = stage
-            for stage_type in optional_stages:
-                stage: Stage = kit_d.stages[stage_type]
-                stage.status = StageStatus.PENDING
-                stage.info = {}
-                kit_d.stages[stage_type] = stage
-            kit_d.to_yaml()
-            st.session_state[f'ask_{stage_type}'] = False
-        elif no_button:
-            st.session_state[f'ask_{stage_type}'] = False
-
+        kit_d.to_yaml()
     return kit_d
 
 def get_create_kit_digital() -> KitDigital:
@@ -129,8 +121,9 @@ with st.sidebar:
     logo_path = st.secrets["paths"]["logo_path"]
     st.image(logo_path)
     st.write("Paipaya © 2023")
-    st.markdown("# Soluciones con inteligencia artificial")
-    st.markdown("Contacte con nosotros: d.correas.oliver@gmail.com")
+    with st.expander("Contacto", expanded=False):
+        st.markdown("# Soluciones con inteligencia artificial")
+        st.markdown("Contacte con nosotros: d.correas.oliver@gmail.com")
 
 title_placeholder = st.empty()
 title_placeholder.markdown("# Kit Digital (Beta)")
@@ -168,6 +161,10 @@ if val == 0:
         display_title("Aceptar cookies", kit_digital.stages[StageType.ACCEPT_COOKIES].status)
     with col2:
         restart_stage(kit_digital, StageType.ACCEPT_COOKIES)
+
+    st.sidebar.markdown("# Información del paso")
+    st.sidebar.success('El objetivo de este paso es aceptar las cookies para que no aparezcan los popups de cookies en los pantallazos.')
+    
     if kit_digital.stages[StageType.ACCEPT_COOKIES].status != StageStatus.PASS:
         kit_digital = accept_cookies(kit_digital)
         if kit_digital.stages[StageType.ACCEPT_COOKIES].status == StageStatus.PASS:
@@ -183,6 +180,10 @@ if val == 1:
         display_title("Obtener urls y seleccionar las válidas", kit_digital.stages[StageType.SELECT_URLS].status)
     with col2:
         restart_stage(kit_digital, StageType.CRAWL_URLS, optional_stages=[StageType.SELECT_URLS])
+
+    st.sidebar.markdown("# Información del paso")
+    st.sidebar.success('El objetivo de este paso es obtener las urls de la página y seleccionar las urls a las que se harán pantallazos. Deben de estar las urls que representen el menú de opciones de la página creada (home, contactos, blog, etc.).')
+
     if kit_digital.stages[StageType.CRAWL_URLS].status != StageStatus.PASS:
         kit_digital = crawl_urls(kit_digital)
         if kit_digital.stages[StageType.CRAWL_URLS].status == StageStatus.PASS:
@@ -209,6 +210,10 @@ if val == 2:
     col1, col2 = st.columns([4, 1])
     with col1:
         display_title("Subir directorios", kit_digital.stages[StageType.DIRECTORIES].status)
+
+    st.sidebar.markdown("# Información del paso")
+    st.sidebar.success('El objetivo de este paso es posicionar la página en la web. Para ello, se sube la información del cliente y la url de la página en 3 directorios.')
+
     if not "directories" in kit_digital.stages[StageType.DIRECTORIES].info:
         kit_digital.stages[StageType.DIRECTORIES].info["directories"] = []
     kit_digital = support_legacy_directories(kit_digital)
@@ -240,6 +245,10 @@ if val == 3:
         display_title("SEO Básico", kit_digital.stages[StageType.SEO_BASICO].status)
     with col2:
         restart_stage(kit_digital, StageType.SEO_BASICO)
+
+    st.sidebar.markdown("# Información del paso")
+    st.sidebar.success('El objetivo de este paso es redactar el texto con el que se justificará que se ha hecho un posicionamiento SEO en la página.')
+
     if kit_digital.stages[StageType.SEO_BASICO].status != StageStatus.PASS:
         kit_digital = set_seo_basico(kit_digital)
         if kit_digital.stages[StageType.SEO_BASICO].status == StageStatus.PASS:
@@ -247,9 +256,7 @@ if val == 3:
 
     # Show SEO Basico
     if kit_digital.stages[StageType.SEO_BASICO].status == StageStatus.PASS:
-        st.markdown(kit_digital.stages[StageType.SEO_BASICO].info["text_before_headers"])
-        st.markdown(kit_digital.stages[StageType.SEO_BASICO].info["text_after_headers"])
-        st.markdown(kit_digital.stages[StageType.SEO_BASICO].info["multiidioma"])
+        kit_digital = show_modiffy_results(kit_digital)
 
 if val == 4:
     # Headers SEO
@@ -279,6 +286,13 @@ if val == 5:
         display_title("Obtener el logo de Kit Digital", kit_digital.stages[StageType.LOGO_KIT_DIGITAL].status)
     with col2:
         restart_stage(kit_digital, StageType.LOGO_KIT_DIGITAL)
+
+    st.sidebar.markdown("# Información del paso")
+    st.sidebar.success('El objetivo de este paso es hacer un pantallazo sobre el logo del kit digital y la unión europea dentro de la página. Es recomendable señalar en un recuadro el logo, por lo que es necesario marcarlo con el ratón y después guardarlo.')
+
+    if kit_digital.stages[StageType.ACCEPT_COOKIES].status != StageStatus.PASS:
+        st.warning("Complete el paso 1 (aceptar las cookies) antes de continuar. Sirve para que no aparezcan los popups de cookies en los pantallazos.")
+        st.stop()
 
     if kit_digital.stages[StageType.LOGO_KIT_DIGITAL].status != StageStatus.PASS:
         get_logo_kit(kit_digital)
@@ -314,6 +328,19 @@ if val == 6:
     with col2:
         restart_stage(kit_digital, StageType.PANTALLAZOS_URLS)
 
+    st.sidebar.markdown("# Información del paso")
+    st.sidebar.success('El objetivo de este paso es hacer un pantallazo de las urls seleccionadas.')
+
+    stop = False
+    if kit_digital.stages[StageType.ACCEPT_COOKIES].status != StageStatus.PASS:
+        st.warning("Complete el paso 1 (aceptar las cookies) antes de continuar. Sirve para que no aparezcan los popups de cookies en los pantallazos.")
+        stop = True
+    if kit_digital.stages[StageType.SELECT_URLS].status != StageStatus.PASS:
+        st.warning("Complete el paso 2 (seleccionar urls) antes de continuar.")
+        stop = True
+    if stop:
+        st.stop()
+    
     if kit_digital.stages[StageType.PANTALLAZOS_URLS].status != StageStatus.PASS:
         get_pantallazos_urls(kit_digital)
         if kit_digital.stages[StageType.PANTALLAZOS_URLS].status == StageStatus.PASS:
@@ -338,6 +365,19 @@ if val == 7:
         display_title("Plantilla de recopilación de evidencias 2: Pantallazos multi-idioma", kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status)
     with col2:
         restart_stage(kit_digital, StageType.PANTALLAZOS_MULTIIDIOMA)
+
+    st.sidebar.markdown("# Información del paso")
+    st.sidebar.success('El objetivo de este paso es hacer un pantallazo de las urls seleccionadas en multi-idioma. Se debe de cambiar el idioma manualmente en el navegador.')
+
+    stop = False
+    if kit_digital.stages[StageType.ACCEPT_COOKIES].status != StageStatus.PASS:
+        st.warning("Complete el paso 1 (aceptar las cookies) antes de continuar. Sirve para que no aparezcan los popups de cookies en los pantallazos.")
+        stop = True
+    if kit_digital.stages[StageType.SELECT_URLS].status != StageStatus.PASS:
+        st.warning("Complete el paso 2 (seleccionar urls) antes de continuar.")
+        stop = True
+    if stop:
+        st.stop()
     
     if kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status != StageStatus.PASS:
         get_pantallazos_multiidioma(kit_digital)

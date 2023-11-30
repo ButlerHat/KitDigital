@@ -1,3 +1,4 @@
+import time
 import requests
 import asyncio
 from typing import Literal
@@ -17,6 +18,18 @@ def _remove_toolbar(utils_endpoint: str):
     ]
     response = requests.post(utils_endpoint + "/change-fluxbox-config", json=config_data)
     return response
+
+def _change_resolution(utils_endpoint: str, resolution: str):
+    """
+    Sends a request to create a new browser instance. You can specify the resolution in fromat "widthxheight".
+    """
+
+    response = requests.get(f"{utils_endpoint}/change-desktop-resolution/{resolution}")
+    if response.status_code == 204:
+        print(f"Resolution set successfully: {resolution}")
+    else:
+        raise Exception(f"Failed to set resolution: {response.status_code}, {response.text}")
+
 
 
 def create_chromium_server(options: dict = {}):
@@ -153,6 +166,11 @@ def get_browser(
 
                 # Remove toolbar. This will remove the toolbar but browser will close
                 _remove_toolbar(response["utils_endpoint"])
+                time.sleep(1)
+                # Change resolution
+                _change_resolution(response["utils_endpoint"], "1280x720")
+                time.sleep(0.5)
+                _change_resolution(response["utils_endpoint"], "1920x1080")
 
                 kit_digital.chrome_server = ChromeServer(
                     **response, 
@@ -161,6 +179,11 @@ def get_browser(
 
         # Now open the browser with options and args
         assert kit_digital.chrome_server, "No se ha podido obtener el navegador."
+
+        # Restart steps
+        st.session_state["executing_cookies"] = False
+        st.session_state["executing_screenshots"] = False
+        st.session_state["executing_logo"] = False
 
         with st.spinner("Abriendo navegador... Espere unos segundos."):
             if chrome_type == ChromeType.PLAYWRIGHT:
@@ -204,7 +227,7 @@ def show_browser(kit_digital: KitDigital, view_only: bool = False) -> KitDigital
         "&password=vscode&autoconnect=true&resize=scale&reconnect=true"
     if view_only:
         vnc_url += "&view_only=true&show_dot=true"
-    components.iframe(vnc_url, height=600, scrolling=True)
+    components.iframe(vnc_url, height=700, scrolling=True)
 
     return kit_digital
 

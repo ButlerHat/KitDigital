@@ -48,7 +48,7 @@ Open URL and Get Info
         New Page  ${URL}
     END
 
-    ${STATUS}  ${MSG}  Run Keyword And Ignore error  Wait For Elements State    xpath=//footer  visible  timeout=5s
+    ${STATUS}  ${MSG}  Run Keyword And Ignore error  Wait For Elements State    xpath=//footer  visible  timeout=2s
     Sleep  2
     IF  '${STATUS}'=='PASS'  
         Scroll TO Element  //footer

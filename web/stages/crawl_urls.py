@@ -140,6 +140,7 @@ def select_urls(kit_digital: KitDigital) -> KitDigital:
 
     # Ask for valid urls
     if kit_digital.stages[StageType.CRAWL_URLS].status == StageStatus.PASS:
+        st.success("El orden en el que se eligen las urls es importante. Es el orden con el que saldrán los pantallazos para la justificación. Poner la pantalla principal primero.")
         suggested_urls = kit_digital.stages[StageType.CRAWL_URLS].info["suggested_urls"]
         st.markdown("### Selecciona las urls válidas")
         with st.form("Selecciona las urls válidas"):
