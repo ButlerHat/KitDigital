@@ -6,5 +6,8 @@
     "pylint.args": [
         "--disable=C0303",
     ],
-    "python.analysis.autoImportCompletions": true
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.extraPaths": [
+        "./web/utils"
+    ]
 }

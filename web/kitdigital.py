@@ -136,11 +136,13 @@ class ChromeServer:
 class KitDigital:
     result_path_root: str = st.secrets.paths.result_kit
 
-    def __init__(self, url: str) -> None:
+    def __init__(self, url: str, user) -> None:
         self.id: str = KitDigital._get_id(url)
         self.url: str = url
+        self.user: str = KitDigital._get_id(user)
+        self.user_email: str = user 
         self.contact_email: str = ""
-        self.results_path: str = os.path.join(self.result_path_root, self.id)
+        self.results_path: str = os.sep.join([self.result_path_root, self.user, self.id])  # Ruta = result_path / user / id
         self.cookies_dir: str = os.path.join(self.results_path, "cookies")
         self.info_file: str = os.path.join(self.results_path, "info_kit.yaml")
         self.word_file: str = os.path.join(self.results_path, "evidencias.docx")
@@ -201,7 +203,8 @@ class KitDigital:
     @classmethod
     def from_dict(cls, data):
         url = data["url"]
-        kit_digital = cls(url)
+        user = data["user"]
+        kit_digital = cls(url, user)
         kit_digital.contact_email = data["contact_email"]
         kit_digital.id = data["id"]
         kit_digital.results_path = data["results_path"]

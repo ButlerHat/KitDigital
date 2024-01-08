@@ -13,6 +13,8 @@ from stages.pantallazos_urls import get_pantallazos_urls
 from stages.pantallazos_multiidioma import get_pantallazos_multiidioma
 from stages.results import show_results
 from kitdigital import Directory, KitDigital, Stage, StageStatus, StageType
+import streamlit as st
+from utils.google_auth import Google_auth
 
 
 # Probar con: https://djadelpeluqueria.es/
@@ -70,7 +72,7 @@ def get_create_kit_digital() -> KitDigital:
             kit_d = KitDigital.get_kit_digital(url)
 
             if not kit_d:
-                kit_d = KitDigital(url)
+                kit_d = KitDigital(url, st.session_state["login"])
                 requests.post(
                     "https://notifications.paipaya.com/kit_digital",
                     headers={
@@ -88,7 +90,6 @@ def get_create_kit_digital() -> KitDigital:
     
     assert kit_d is not None, "No se ha podido crear el kit digital."
     return kit_d
-
 
 def display_title(msg: str, status: StageStatus):
     """
@@ -125,6 +126,25 @@ with st.sidebar:
         st.markdown("# Soluciones con inteligencia artificial")
         st.markdown("Contacte con nosotros: d.correas.oliver@gmail.com")
 
+
+### AÑADIR LOGIN
+if not st.session_state.get("login", None):
+    client_id = "947045396186-n9lpd4b1kl8h8hp0h2vgv2pkdq9pta4o.apps.googleusercontent.com"
+    client_secret = "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"
+    redirect_uri = "http://localhost:8503"
+
+
+    user_profile: dict | None = Google_auth(
+            clientId=client_id, clientSecret=client_secret, redirect_uri=redirect_uri
+        )
+
+    if not user_profile:
+        st.stop()
+    
+    st.session_state["login"] = user_profile.get("email").split("@")[0].upper()
+
+
+st.write("Has iniciado sesión como", st.session_state["login"])
 title_placeholder = st.empty()
 title_placeholder.markdown("# Kit Digital (Beta)")
 
