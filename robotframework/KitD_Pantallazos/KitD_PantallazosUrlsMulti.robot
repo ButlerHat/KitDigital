@@ -28,8 +28,8 @@ ${UTILS_ENDPOINT}
 ${RETURN_FILE}  ${OUTPUT_DIR}${/}msg.csv
 ${ID_EXECUTION}  0
 ${COOKIES_DIR}   /tmp/djadelpeluqueria
-${WORD_FILE_TEMPLATE}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/KitD_Pantallazos/Plantilla.docx
-${WORD_FILE}    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/KitD_Pantallazos/PlantillaPelu.docx
+# ${WORD_FILE_TEMPLATE}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/KitD_Pantallazos/Plantilla.docx
+# ${WORD_FILE}    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/KitD_Pantallazos/PlantillaPelu.docx
 
 
 *** Test Cases ***
@@ -82,8 +82,8 @@ Store URL
     FINALLY
         Set Browser Timeout    ${old_timeout}
     END
-    Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_MULTI-IDIOMA}   ${page_title}    ${OUTPUT_DIR}${/}screenshot_${page_title}.png
+    # Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_MULTI-IDIOMA}   ${page_title}    ${OUTPUT_DIR}${/}screenshot_${page_title}.png
 
     # Close Page
-    Append To File    ${RETURN_FILE}    ${\n}${ID_EXECUTION},KitD_PantallazosUrls.robot,PASS,,"${URL}"${\n}
+    Append To File    ${RETURN_FILE}    ${\n}${ID_EXECUTION},KitD_PantallazosUrls.robot,PASS,"${OUTPUT_DIR}${/}screenshot_${page_title}.png","${URL}"${\n}
 

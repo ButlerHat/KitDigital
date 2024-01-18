@@ -12,6 +12,7 @@ from stages.logo_kit import get_logo_kit
 from stages.pantallazos_urls import get_pantallazos_urls
 from stages.pantallazos_multiidioma import get_pantallazos_multiidioma
 from stages.results import show_results
+from stages.last_touches import add_last_touches
 from kitdigital import Directory, KitDigital, Stage, StageStatus, StageType
 
 
@@ -40,6 +41,18 @@ def restart_stage(kit_d: KitDigital, stage_type: StageType, optional_stages: lis
             stage.info = {}
             kit_d.stages[stage_type] = stage
         kit_d.to_yaml()
+    return kit_d
+
+def restart_browser(kit_d: KitDigital) -> KitDigital:
+    """
+    Restart browser.
+    """
+    restart = st.button("Reiniciar Navegador", type='primary')
+    if restart:
+        kit_d = remote_browser.delete_browser_after_stage(kit_d)
+        kit_d.to_yaml()
+        st.rerun()
+
     return kit_d
 
 def get_create_kit_digital() -> KitDigital:
@@ -137,7 +150,7 @@ created_kit_digital = get_create_kit_digital()
 assert created_kit_digital is not None, "No se ha podido crear el kit digital."
 kit_digital: KitDigital = created_kit_digital
 
-title_placeholder.markdown(f"# Kit Digital (Beta) ({kit_digital.url})")
+title_placeholder.markdown(f"# Kit Digital ({kit_digital.url})")
 
 val = stx.stepper_bar(steps=[
     "Aceptar cookies", 
@@ -148,7 +161,7 @@ val = stx.stepper_bar(steps=[
     "Obtener el logo de Kit Digital", 
     "Pantallazos Urls", 
     "Pantallazos Multiidioma",
-    "Informe de accesibilidad",
+    "Últimos ajustes",
     "Resultados"
     ],
     lock_sequence=False
@@ -161,6 +174,7 @@ if val == 0:
         display_title("Aceptar cookies", kit_digital.stages[StageType.ACCEPT_COOKIES].status)
     with col2:
         restart_stage(kit_digital, StageType.ACCEPT_COOKIES)
+        restart_browser(kit_digital)
 
     st.sidebar.markdown("# Información del paso")
     st.sidebar.success('El objetivo de este paso es aceptar las cookies para que no aparezcan los popups de cookies en los pantallazos.')
@@ -192,10 +206,15 @@ if val == 1:
     # Show suggested urls
     if kit_digital.stages[StageType.CRAWL_URLS].status == StageStatus.PASS:
         urls_stage: Stage = kit_digital.stages[StageType.CRAWL_URLS]
+        st.markdown("### Urls sugeridas")
         st.write(urls_stage.info["suggested_urls"])
 
+        if "suggested_urls_multi" in urls_stage.info:
+            st.markdown("### Urls sugeridas multi-idioma")
+            st.write(urls_stage.info["suggested_urls_multi"])
+
     # Select urls
-    st.markdown("## Seleccion de urls")
+    st.markdown("### Seleccion de urls")
     if kit_digital.stages[StageType.SELECT_URLS].status != StageStatus.PASS:
         kit_digital = select_urls(kit_digital)
         if kit_digital.stages[StageType.SELECT_URLS].status == StageStatus.PASS:
@@ -204,7 +223,12 @@ if val == 1:
     # Show urls
     if kit_digital.stages[StageType.SELECT_URLS].status == StageStatus.PASS:
         urls_stage: Stage = kit_digital.stages[StageType.SELECT_URLS]
+        st.markdown("### Urls seleccionadas")
         st.write(urls_stage.info["urls"])
+
+        if "urls_multi" in urls_stage.info:
+            st.markdown("### Urls seleccionadas multi-idioma")
+            st.write(urls_stage.info["urls_multi"])
 
 if val == 2:
     col1, col2 = st.columns([4, 1])
@@ -217,26 +241,34 @@ if val == 2:
     if not "directories" in kit_digital.stages[StageType.DIRECTORIES].info:
         kit_digital.stages[StageType.DIRECTORIES].info["directories"] = []
     kit_digital = support_legacy_directories(kit_digital)
-    st.markdown("## Añadir directorio manualmente")
-    with st.expander("Añadir directorio manualmente", expanded=False):
-        kit_digital = add_directory_manually(kit_digital)
-    # Directories
-    if kit_digital.stages[StageType.CALLUPCONTACT].status != StageStatus.PASS or \
-        kit_digital.stages[StageType.DONDEESTAMOS].status != StageStatus.PASS or \
-        kit_digital.stages[StageType.TRAVELFUL].status != StageStatus.PASS:
-        kit_digital = directories(kit_digital)
-        if kit_digital.stages[StageType.CALLUPCONTACT].status == StageStatus.PASS and \
-            kit_digital.stages[StageType.DONDEESTAMOS].status == StageStatus.PASS and \
-            kit_digital.stages[StageType.TRAVELFUL].status == StageStatus.PASS:
-            st.rerun()
-
+    
     # Show directories
     directories_: List[Directory] = kit_digital.stages[StageType.DIRECTORIES].info.get("directories", [])
+    faltan_text = "" if len(directories_) >= 3 else f"(faltan {3 - len(directories_)} directorios)"
+    
+    st.markdown(f"## Se han subido <span style='color:green'>{len(directories_)}</span> directorios <span style='color:red'>{faltan_text}</span>", unsafe_allow_html=True)
+    if len(directories_) < 3:
+        st.info("Se pueden añadir directorios manualmente o subirlos automáticamente.")
     for directory in directories_:
         with st.expander(f"{directory['name']}"):
             st.markdown(f"### {directory['name']}")
             st.markdown(f"URL: {directory['url']}")
             st.image(directory["screenshot"])
+    
+    st.markdown("## Añadir directorio manualmente")
+    with st.expander("Añadir directorio manualmente", expanded=True):
+        kit_digital = add_directory_manually(kit_digital)
+    
+    # Directories
+    if kit_digital.stages[StageType.CALLUPCONTACT].status != StageStatus.PASS or \
+        kit_digital.stages[StageType.DONDEESTAMOS].status != StageStatus.PASS or \
+        kit_digital.stages[StageType.TRAVELFUL].status != StageStatus.PASS:
+        kit_digital = directories(kit_digital)
+
+        if kit_digital.stages[StageType.CALLUPCONTACT].status == StageStatus.PASS and \
+            kit_digital.stages[StageType.DONDEESTAMOS].status == StageStatus.PASS and \
+            kit_digital.stages[StageType.TRAVELFUL].status == StageStatus.PASS:
+            st.rerun()
 
 if val == 3:
     # SEO Basico
@@ -342,21 +374,29 @@ if val == 6:
         st.stop()
     
     if kit_digital.stages[StageType.PANTALLAZOS_URLS].status != StageStatus.PASS:
-        get_pantallazos_urls(kit_digital)
+        get_pantallazos_urls(
+            kit_digital,
+            urls=kit_digital.stages[StageType.SELECT_URLS].info["urls"],
+            stage=StageType.PANTALLAZOS_URLS,
+            capture_mobile=True
+        )
         if kit_digital.stages[StageType.PANTALLAZOS_URLS].status == StageStatus.PASS:
             st.rerun()
 
-    # Show Plantilla de recopilacion de evidencias
+    # Show screenshots
     if kit_digital.stages[StageType.PANTALLAZOS_URLS].status == StageStatus.PASS:
-        st.info("Se puede descargar para visualizar el documento, pero no está terminado. Espere a llegar al apartado de resultados.")
-        with open(kit_digital.stages[StageType.PANTALLAZOS_URLS].info["word"], "rb") as f:
-            st.download_button(
-                label="Descargar documento NO TERMINADO",
-                data=f,
-                file_name="pantallazos_urls_preview.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                key="pantallazos_urls"
-            )
+        st.success("Estos son los pantallazos obtenidos.")
+        for i, screenshot_path in enumerate(kit_digital.stages[StageType.PANTALLAZOS_URLS].info["screenshots"]):
+            with st.expander(f"Pantallazo {i+1}"):
+                st.image(screenshot_path)
+        # Show mobile, desktop and ipad screenshots
+        with st.expander("Pantallazos móvil"):
+            st.image(kit_digital.stages[StageType.PANTALLAZOS_URLS].info["mobile_screenshot"])
+        with st.expander("Pantallazos ipad"):
+            st.image(kit_digital.stages[StageType.PANTALLAZOS_URLS].info["ipad_screenshot"])
+        with st.expander("Pantallazos escritorio"):
+            st.image(kit_digital.stages[StageType.PANTALLAZOS_URLS].info["desktop_screenshot"])
+        
 
 if val == 7:
     # Plantilla de recopilacion de evidencias multi-idioma
@@ -380,29 +420,63 @@ if val == 7:
         st.stop()
     
     if kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status != StageStatus.PASS:
-        get_pantallazos_multiidioma(kit_digital)
+        if not "urls_multi" in kit_digital.stages[StageType.SELECT_URLS].info:
+            st.warning("Para que se realicen los pantallazos automáticamente, se deben de seleccionar las urls multi-idioma en el paso 2. " +
+                       "Si la página no tiene urls multi-idioma, se puede realizar los pantallazos con las siguientes instrucciones.")
+            st.info("Para realizar los pantallazos sigue las siguientes instrucciones: \n" +
+                    "1. En el navegador que se abre, se abrirán los enlaces a las páginas que hay que hacer pantallazo. \n" +
+                    "2. Espere el mensaje verde debajo del navegador indicando que ya ha terminado de abrir el navegador. \n" +
+                    "3. Dentro del navegador, cambia la página de idioma. \n" +
+                    "4. Una vez se haya cambiado la página, click en el botón de abajo donde pone 'Realizar pantallazo'. \n" +
+                    "5. Espere a que se haga el pantallazo y vuelve a esperar por el paso 1. \n"
+                )
+            get_pantallazos_multiidioma(kit_digital)
+        else:
+            get_pantallazos_urls(
+                kit_digital,
+                urls=kit_digital.stages[StageType.SELECT_URLS].info["urls_multi"],
+                stage=StageType.PANTALLAZOS_MULTIIDIOMA,
+                capture_mobile=False
+            )
         if kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status == StageStatus.PASS:
             st.rerun()
 
     # Show Plantilla de recopilacion de evidencias multi-idioma
     if kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status == StageStatus.PASS:
-        st.info("Se puede descargar para visualizar el documento, pero no está terminado. Espere a llegar al apartado de resultados.")
-        with open(kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].info["word"], "rb") as f:
-            st.download_button(
-                label="Descargar documento NO TERMINADO",
-                data=f,
-                file_name="pantallazos_multiidioma_preview.docx",
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                key="pantallazos_multiidioma"
-            )
+        st.success("Estos son los pantallazos obtenidos.")
+        for i, screenshot_path in enumerate(kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].info["screenshots"]):
+            with st.expander(f"Pantallazo {i+1}"):
+                st.image(screenshot_path)
+            
 
 if val == 8:
-    display_title("Informe de accesibilidad", StageStatus.SKIP)
-    st.warning('Se está elaborando el informe de accesibilidad. Aún no está disponible. Plantilla en resultados.')
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        display_title("Últimos ajustes", kit_digital.stages[StageType.LAST_TOUCHES].status)
+    with col2:
+        restart_stage(kit_digital, StageType.LAST_TOUCHES)
+
+    st.sidebar.markdown("# Información del paso")
+    st.sidebar.success('El objetivo de este paso es completar información que faltaría para tener todo subido en la plataforma.')
+
+    if kit_digital.stages[StageType.LAST_TOUCHES].status != StageStatus.PASS:
+        rerun_later = True
+    else:
+        rerun_later = False
+    
+    kit_digital: KitDigital = add_last_touches(kit_digital)
+    
+    if rerun_later and kit_digital.stages[StageType.LAST_TOUCHES].status == StageStatus.PASS:
+        st.rerun()
 
 
 # If all stages pass, delete browser
-if all([x.status == StageStatus.PASS for x in kit_digital.stages.values()]):
+stages_no_directories = {
+    stage_type: stage for stage_type, stage in kit_digital.stages.items() if stage_type != StageType.CALLUPCONTACT and \
+        stage_type != StageType.DONDEESTAMOS and \
+        stage_type != StageType.TRAVELFUL
+}
+if all([x.status == StageStatus.PASS for x in stages_no_directories.values()]):
     kit_digital = remote_browser.delete_browser_after_stage(kit_digital)
     kit_digital.to_yaml()
     status_result = StageStatus.PASS

@@ -114,6 +114,9 @@ def get_browser(
         maximize_or_full: Literal['maximize', 'full'] = 'maximize'
     ) -> KitDigital:
     """Get the browser and show it in an iframe."""
+
+    # Check if chrome_type is correct
+    assert chrome_type in [ChromeType.CDP, ChromeType.PLAYWRIGHT], "Tipo de navegador no soportado."
     
     # Configure options
     cdp_args = [
@@ -143,7 +146,10 @@ def get_browser(
         if kit_digital.chrome_server and kit_digital.chrome_server.chrome_type == chrome_type:
             ret_val = asyncio.run(robot_handler.run_robot(
                 "health_check",
-                [f'WSENDPOINT:"{kit_digital.chrome_server.playwright_endpoint}"'],
+                [
+                    f'WSENDPOINT:"{kit_digital.chrome_server.playwright_endpoint}"',
+                    f'TYPE:"{kit_digital.chrome_server.chrome_type.value}"',
+                ],
                 "healthcheck.robot",
                 msg_info="Comprobando el navegador..."
             ))
@@ -190,14 +196,14 @@ def get_browser(
                     kit_digital.chrome_server = ChromeServer(**response, chrome_type=chrome_type)
                     kit_digital.to_yaml()
                 except Exception as e:
-                    raise Exception("El navegador de playwright no ha podido abrirse.")
+                    raise Exception("El navegador de playwright no ha podido abrirse." + str(e))
             elif chrome_type == ChromeType.CDP:
                 try:
                     response = switch_to_chrome_cdp(kit_digital.chrome_server, args=cdp_args)
                     kit_digital.chrome_server = ChromeServer(**response, chrome_type=chrome_type)
                     kit_digital.to_yaml()
                 except Exception as e:
-                    raise Exception("El navegador de cdp no ha podido abrirse.")
+                    raise Exception("El navegador de cdp no ha podido abrirse." + str(e))
             else:
                 raise Exception("Tipo de navegador no soportado.")
 

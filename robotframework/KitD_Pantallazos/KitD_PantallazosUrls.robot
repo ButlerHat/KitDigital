@@ -34,11 +34,12 @@ Library    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/Test
 ${RETURN_FILE}  ${OUTPUT_DIR}${/}msg.csv
 ${ID_EXECUTION}  0
 ${COOKIES_DIR}   /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/result_kit/djadelpeluqueriaes/cookies
-${WORD_FILE_TEMPLATE}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/KitD_Pantallazos/Plantilla.docx
-${WORD_FILE}    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/KitD_Pantallazos/PlantillaPelu.docx
+# ${WORD_FILE_TEMPLATE}  /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/KitD_Pantallazos/Plantilla.docx
+# ${WORD_FILE}    /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/robotframework/KitD_Pantallazos/PlantillaPelu.docx
 ${escritorio}   Versión escritorio (1280x800)
 ${movil}        Versión móvil, iPhone (375x667)
 ${tableta}      Versión tableta, iPad Mini (768x1024)
+${CAPTURE_MOBILE}   ${True}
 
 
 *** Test Cases ***
@@ -62,12 +63,14 @@ Get Title Screenshots and versions for URLs
     # Set Resolution to 1280x720
     Change Resolution    ${UTILS_ENDPOINT}    1920x1080
 
-    FOR    ${url}    IN    @{urls}
-        Open URL and Get Info    ${url}
+    FOR  ${i}  ${url}    IN ENUMERATE    @{urls}  start=1
+        Open URL and Screenshot    ${url}  ${i}
     END
 
-    # Set resolution to 1920x1080
-    # Change Resolution    ${UTILS_ENDPOINT}    1920x1080
+    IF  not ${CAPTURE_MOBILE}
+        Append To File    ${RETURN_FILE}    ${\n}${ID_EXECUTION},KitD_PantallazosUrls.robot,PASS,,Se han anadido los pantallazos de los dispositivos${\n}
+        Pass Execution    message=No se han capturado las versiones móviles por CAPTURE_MOBILE=${CAPTURE_MOBILE}
+    END
 
     Take Different Version Screenshots    ${urls[0]}
     # Restore resolution
@@ -78,8 +81,8 @@ Get Title Screenshots and versions for URLs
 
 
 *** Keywords *** 
-Open URL and Get Info
-    [Arguments]    ${url}
+Open URL and Screenshot
+    [Arguments]    ${url}  ${i}
     
     ${variables}  Get Variables
     ${is_WSENDPOINT}   Evaluate   "\${WSENDPOINT}" in $variables
@@ -100,8 +103,8 @@ Open URL and Get Info
     ${status}=    Run Keyword And Return Status    Get Title
     ${page_title}=    Run Keyword If    ${status}==True    Get Title    ELSE    Set Variable    ${EMPTY}
 
-    Take Os Screenshot  ${UTILS_ENDPOINT}  ${OUTPUT_DIR}${/}screenshot_${page_title}.png
-    Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_WEB}   ${page_title}    ${OUTPUT_DIR}${/}screenshot_${page_title}.png
+    Take Os Screenshot  ${UTILS_ENDPOINT}  ${OUTPUT_DIR}${/}${i}.png
+    # Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_WEB}   Página ${i}.    ${OUTPUT_DIR}${/}screenshot_${page_title}.png
 
 Take Different Version Screenshots
     [Arguments]    ${url}
@@ -139,6 +142,6 @@ Take Different Version Screenshots
 
     Open Close Dev Tools  ${UTILS_ENDPOINT}
 
-    Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZO_WEB_MOVIL}   ${movil}     ${OUTPUT_DIR}${/}mobile_screenshot.png   width_inches=3.5
-    Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZO_WEB_TABLETA}   ${tableta}     ${OUTPUT_DIR}${/}ipad_screenshot.png   width_inches=4
-    Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZO_WEB_ESCRITORIO}   ${escritorio}     ${OUTPUT_DIR}${/}desktop_screenshot.png
+    # Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZO_WEB_MOVIL}   ${movil}     ${OUTPUT_DIR}${/}mobile_screenshot.png   width_inches=3.5
+    # Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZO_WEB_TABLETA}   ${tableta}     ${OUTPUT_DIR}${/}ipad_screenshot.png   width_inches=4
+    # Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZO_WEB_ESCRITORIO}   ${escritorio}     ${OUTPUT_DIR}${/}desktop_screenshot.png

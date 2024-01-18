@@ -91,7 +91,7 @@ travelful
     Run Keyword And Ignore Error  Scroll To Element  //h1
     Take Screenshot  filename=${SCREENSHOT_DIR}${/}travelful.png
     
-    Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Travelful: ${url_result}    ${SCREENSHOT_DIR}${/}travelful.png
+    # Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Travelful: ${url_result}    ${SCREENSHOT_DIR}${/}travelful.png
     Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},travelful,PASS,,"URL:${url_result}|SCREENSHOT:${SCREENSHOT_DIR}${/}travelful.png"${\n}
 
 

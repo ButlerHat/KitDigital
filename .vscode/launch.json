@@ -18,5 +18,19 @@
                 "app.py"
             ],
         },
+        {
+            "name": "Python: Streamlit Auth",
+            "type": "python",
+            "request": "launch",
+            "program": "/opt/conda/envs/web_env/bin/streamlit",
+            "python": "/opt/conda/envs/web_env/bin/python",
+            "console": "integratedTerminal",
+            "cwd": "/workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/web/utils",
+            "args": [
+                // "run", "-n", "web_env", "",
+                "run",
+                "oauth.py"
+            ],
+        },
     ]
 }

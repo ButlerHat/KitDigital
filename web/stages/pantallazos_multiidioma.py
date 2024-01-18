@@ -37,7 +37,6 @@ def callback_pantallazos(ret_val: int | None, result_path: str, kwargs_callbacks
     vars_ = run_robot_kwargs["vars_"]
     id_execution = [x for x in vars_ if "ID_EXECUTION" in x][0].split(":")[1].strip('"')
     msg_csv = [x for x in vars_ if "RETURN_FILE" in x][0].split(":")[1].strip('"')
-    word_file = [x for x in vars_ if "WORD_FILE" in x][0].split(":")[1].strip('"')
 
     df = pd.read_csv(msg_csv)
     # Get the row with id_execution = id_execution. If is empty, return
@@ -46,10 +45,10 @@ def callback_pantallazos(ret_val: int | None, result_path: str, kwargs_callbacks
         df_id = df[df["id_execution"] == str(id_execution)]
 
     if len(df_id) == 0:
-        st.warning("No se ha podido crear el word de recopilacion de evidencias de multiidioma.")
+        st.warning("No se ha podido hacer el pantallazo.")
         # Send notification
         url: str = kit_digital.url
-        kit_digital = send_contact_to_ntfy(kit_digital, f"Automatizacion word de evidencias (pantallazos multiidioma). No ha funcionado la automatización para {url}.")
+        kit_digital = send_contact_to_ntfy(kit_digital, f"captura de pantallazos (pantallazos multiidioma). No ha funcionado la automatización para {url}.")
         kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status = StageStatus.FAIL
         kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].info["error"] = "Fallo robotframework."
         kit_digital.to_yaml()
@@ -60,24 +59,32 @@ def callback_pantallazos(ret_val: int | None, result_path: str, kwargs_callbacks
         # Set Url to Pass. Iterate 
         for row in df_pass.itertuples():
             try:
-                kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].info['urls'][row.msg] = "PASS"
+                stage = kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA]
+                stage.info['urls'][row.msg] = "PASS"
+                # Get Screenshots 
+                screenshots: list = stage.info.get("screenshots", [])
+                if not row.exception:
+                    send_contact_to_ntfy(kit_digital, f"Error en captura de pantallazos (pantallazos multiidioma). No se ha podido sacar el pantallazo {row.msg} en el kit digital.")    
+                # Rename to len screenshots
+                new_name = os.path.join(result_path, f"{len(screenshots)}.png")
+                os.rename(row.exception, new_name)
+                screenshots.append(new_name)
+                stage.info["screenshots"] = screenshots
+                kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA] = stage
+                kit_digital.to_yaml()
+
+                # Check if all urls are in PASS
+                if all([url == "PASS" for url in kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].info['urls'].values()]):
+                    kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status = StageStatus.PASS
+                    kit_digital.to_yaml()
+                return
+            
             except KeyError:
-                send_contact_to_ntfy(kit_digital, f"Error en automatizacion word de evidencias (pantallazos multiidioma). No se ha encontrado la url {row.msg} en el kit digital.")
-
-        stage = kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA]
-        stage.info["word"] = word_file
-        kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA] = stage
-        kit_digital.to_yaml()
+                send_contact_to_ntfy(kit_digital, f"Error en captura de pantallazos (pantallazos multiidioma). No se ha encontrado la url {row.msg} en el kit digital.")
     
-    else:
-        kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status = StageStatus.FAIL
-        kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].info["error"] = "Fallo robotframework."
-        kit_digital.to_yaml()
-
-    # Check if all urls are in PASS
-    if all([url == "PASS" for url in kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].info['urls'].values()]):
-        kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status = StageStatus.PASS
-        kit_digital.to_yaml()
+    kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status = StageStatus.FAIL
+    kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].info["error"] = "Fallo robotframework."
+    kit_digital.to_yaml()
 
 async def run_robot(kit_digital: KitDigital):
     """
@@ -110,7 +117,6 @@ async def run_robot(kit_digital: KitDigital):
             f'UTILS_ENDPOINT:"{kit_digital.chrome_server.utils_endpoint}"',
             f'COOKIES_DIR:"{kit_digital.cookies_dir}"',
             f'URL:"{kit_digital.url}"',
-            f'WORD_FILE:"{kit_digital.word_file}"',
             f'RETURN_FILE:"{msg_csv}"',
             f'ID_EXECUTION:"{id_execution}"',
             f'URL:"{url}"'

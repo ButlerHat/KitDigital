@@ -157,7 +157,7 @@ dondeestamos
 
     Take Screenshot  filename=${SCREENSHOT_DIR}${/}dondeestamos.png
     
-    Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Donde estamos: ${url_result}   ${SCREENSHOT_DIR}${/}dondeestamos.png
+    # Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Donde estamos: ${url_result}   ${SCREENSHOT_DIR}${/}dondeestamos.png
     Append To File    ${RETURN_FILE}  ${\n}${ID_EXECUTION},dondeestamos,PASS,,"URL:${url_result}|SCREENSHOT:${SCREENSHOT_DIR}${/}dondeestamos.png"${\n}
 
 *** Keywords ***

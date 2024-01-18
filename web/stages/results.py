@@ -22,15 +22,12 @@ def show_results(kit_digital: KitDigital):
             st.warning('Se deben obtener las urls de la página previamente. Haz el paso 2')
 
         st.markdown('### Posicionamiento básico en directorios')
-        if kit_digital.stages[StageType.DIRECTORIES].status == "PASS":
-            url_dondeestamos = kit_digital.stages[StageType.DONDEESTAMOS].info["url"]
-            url_callupcontact = kit_digital.stages[StageType.CALLUPCONTACT].info["url"]
-            url_travelful = kit_digital.stages[StageType.TRAVELFUL].info["url"]
-            text = f'Hemos logrado posicionar la web en 3 distintos directorios, lo que contribuirá a aumentar ' +\
-                'su presencia y visibilidad en internet como:\n\n' + \
-                f'1. Donde-estamos: \n{url_dondeestamos}\n' + \
-                f'2. Callupcontact: \n{url_callupcontact}\n' + \
-                f'3. Travelful: \n{url_travelful}\n'
+        if kit_digital.stages[StageType.DIRECTORIES].status == "PASS":            
+            directories: dict = kit_digital.stages[StageType.DIRECTORIES].info.get("directories", [])
+            text = f'Además, hemos logrado posicionar la web en {len(directories)} directorios más:\n\n'
+            if len(directories) > 0:
+                text += '\n'.join([f'{i}. {directory.get("name", "")}: {directory.get("url", "")}' for i, directory in enumerate(directories, 1)])
+            
             st.code(text, language='text')
         else:
             st.warning('Se debe subir la información de la empresa a 3 directorios. Haz el paso 3')
@@ -80,40 +77,89 @@ def show_results(kit_digital: KitDigital):
     st.markdown('### Informe de accesibilidad')
     with st.expander('Informe de accesibilidad', expanded=True):
         st.write('Informe de revisión de la accesibilidad según el modelo disponible en Acelerapyme. NO es obligatorio para Segmento 1')
-        st.warning('Aún está sin completar. Aquí está la plantilla')
-        with open(st.secrets.paths.accessibility_excel, "rb") as f:
-            st.download_button(
-                label="Descargar documento",
-                data=f,
-                file_name="accesibilidad.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
-
+        if kit_digital.stages[StageType.LAST_TOUCHES].info.get('accesibilidad', None):
+            with open(kit_digital.stages[StageType.LAST_TOUCHES].info["accesibilidad"], "rb") as f:
+                st.download_button(
+                    label="Descargar documento",
+                    data=f,
+                    file_name="accesibilidad.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+        else:
+            st.warning('Informe de accesibilidad no subido. Haga el paso 9')
+        
     st.markdown('### Plantilla recopilación de evidencias')
     if kit_digital.stages[StageType.PANTALLAZOS_URLS].status == "PASS" and \
         kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].status == "PASS":
         # Copy word to word_result
-        assert os.path.exists(kit_digital.word_file)
-        os.system(f"cp {kit_digital.word_file} {kit_digital.word_file_result}")
+        assert os.path.exists(st.secrets.paths.word_template), f"La plantilla de word no existe. Consulte con el administrador"
+        os.system(f"cp {st.secrets.paths.word_template} {kit_digital.word_file}")
 
         # Delete placeholders.
-        with st.spinner('Eliminando placeholders...'):
-            if pdf_utils.check_if_identifier_exists(kit_digital.word_file_result, "PANTALLAZOS_WEB"):
-                pdf_utils.remove_identifier(kit_digital.word_file_result, "{PANTALLAZOS_WEB}")
-            if pdf_utils.check_if_identifier_exists(kit_digital.word_file_result, "PANTALLAZO_WEB_ESCRITORIO"):
-                pdf_utils.remove_identifier(kit_digital.word_file_result, "{PANTALLAZO_WEB_ESCRITORIO}")
-            if pdf_utils.check_if_identifier_exists(kit_digital.word_file_result, "PANTALLAZO_WEB_MOVIL"):
-                pdf_utils.remove_identifier(kit_digital.word_file_result, "{PANTALLAZO_WEB_MOVIL}")
-            if pdf_utils.check_if_identifier_exists(kit_digital.word_file_result, "PANTALLAZO_WEB_TABLETA"):
-                pdf_utils.remove_identifier(kit_digital.word_file_result, "{PANTALLAZO_WEB_TABLETA}")
-            if pdf_utils.check_if_identifier_exists(kit_digital.word_file_result, "PANTALLAZOS_MULTI-IDIOMA"):
-                pdf_utils.remove_identifier(kit_digital.word_file_result, "{PANTALLAZOS_MULTI-IDIOMA}")
-            if pdf_utils.check_if_identifier_exists(kit_digital.word_file_result, "PANTALLAZOS_DIRECTORIOS"):
-                pdf_utils.remove_identifier(kit_digital.word_file_result, "{PANTALLAZOS_DIRECTORIOS}")
+        with st.spinner('Generando word...'):
+            # Insert hosting screenshots
+            if kit_digital.stages[StageType.LAST_TOUCHES].info.get("hosting_screenshots", None):
+                for hosting_screenshot in kit_digital.stages[StageType.LAST_TOUCHES].info["hosting_screenshots"]:
+                    pdf_utils.append_text_and_picture_to_document(kit_digital.word_file, "{INSERTAR_PANTALLAZOS_HOSTING}", "", hosting_screenshot)
+                if pdf_utils.check_if_identifier_exists(kit_digital.word_file, "INSERTAR_PANTALLAZOS_HOSTING"):
+                    pdf_utils.remove_identifier(kit_digital.word_file, "{INSERTAR_PANTALLAZOS_HOSTING}")
+            else:
+                st.warning('No se han subido pantallazos del hosting')
+
+            # Insert autogestionable screenshots
+            if kit_digital.stages[StageType.LAST_TOUCHES].info.get("web_screenshots", None):
+                for web_screenshot in kit_digital.stages[StageType.LAST_TOUCHES].info["web_screenshots"]:
+                    pdf_utils.append_text_and_picture_to_document(kit_digital.word_file, "{CAPTURAS_AUTOGESTIONABLE}", "", web_screenshot)
+                if pdf_utils.check_if_identifier_exists(kit_digital.word_file, "CAPTURAS_AUTOGESTIONABLE"):
+                    pdf_utils.remove_identifier(kit_digital.word_file, "{CAPTURAS_AUTOGESTIONABLE}")
+            else:
+                st.warning('No se han subido pantallazos de la web autogestionable')
+
+            # Insert urls screenshots
+            if kit_digital.stages[StageType.PANTALLAZOS_URLS].info.get("screenshots", None):
+                for i, screenshot in enumerate(kit_digital.stages[StageType.PANTALLAZOS_URLS].info["screenshots"]):
+                    pdf_utils.append_text_and_picture_to_document(kit_digital.word_file, "{PANTALLAZOS_WEB}", f"Página {i}.", screenshot)
+                if pdf_utils.check_if_identifier_exists(kit_digital.word_file, "PANTALLAZOS_WEB"):
+                    pdf_utils.remove_identifier(kit_digital.word_file, "{PANTALLAZOS_WEB}")
+
+            # Insert urls desktop
+            if kit_digital.stages[StageType.PANTALLAZOS_URLS].info.get("desktop_screenshot", None):
+                desktop_screenshot = kit_digital.stages[StageType.PANTALLAZOS_URLS].info["desktop_screenshot"]
+                pdf_utils.append_text_and_picture_to_document(kit_digital.word_file, "{PANTALLAZO_WEB_ESCRITORIO}", "", desktop_screenshot)
+                if pdf_utils.check_if_identifier_exists(kit_digital.word_file, "PANTALLAZO_WEB_ESCRITORIO"):
+                    pdf_utils.remove_identifier(kit_digital.word_file, "{PANTALLAZO_WEB_ESCRITORIO}")
+
+            # Insert urls mobile
+            if kit_digital.stages[StageType.PANTALLAZOS_URLS].info.get("mobile_screenshot", None):
+                mobile_screenshot = kit_digital.stages[StageType.PANTALLAZOS_URLS].info["mobile_screenshot"]
+                pdf_utils.append_text_and_picture_to_document(kit_digital.word_file, "{PANTALLAZO_WEB_MOVIL}", "", mobile_screenshot)
+                if pdf_utils.check_if_identifier_exists(kit_digital.word_file, "PANTALLAZO_WEB_MOVIL"):
+                    pdf_utils.remove_identifier(kit_digital.word_file, "{PANTALLAZO_WEB_MOVIL}")
+
+            # Insert urls ipad
+            if kit_digital.stages[StageType.PANTALLAZOS_URLS].info.get("ipad_screenshot", None):
+                ipad_screenshot = kit_digital.stages[StageType.PANTALLAZOS_URLS].info["ipad_screenshot"]
+                pdf_utils.append_text_and_picture_to_document(kit_digital.word_file, "{PANTALLAZO_WEB_TABLETA}", "", ipad_screenshot)
+                if pdf_utils.check_if_identifier_exists(kit_digital.word_file, "PANTALLAZO_WEB_TABLETA"):
+                    pdf_utils.remove_identifier(kit_digital.word_file, "{PANTALLAZO_WEB_TABLETA}")
+
+            # Insert multiidioma screenshots
+            if kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].info.get("screenshots", None):
+                for i, screenshot in enumerate(kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].info["screenshots"]):
+                    pdf_utils.append_text_and_picture_to_document(kit_digital.word_file, "{PANTALLAZOS_MULTI-IDIOMA}", f"Página {i}.", screenshot)
+                if pdf_utils.check_if_identifier_exists(kit_digital.word_file, "PANTALLAZOS_MULTI-IDIOMA"):
+                    pdf_utils.remove_identifier(kit_digital.word_file, "{PANTALLAZOS_MULTI-IDIOMA}")
+
+            # Insert directories screenshots
+            if kit_digital.stages[StageType.DIRECTORIES].info.get("directories", None):
+                for directory in kit_digital.stages[StageType.DIRECTORIES].info["directories"]:
+                    pdf_utils.append_text_and_picture_to_document(kit_digital.word_file, "{PANTALLAZOS_DIRECTORIOS}", directory.get("name", ""), directory.get("screenshot", ""))
+                if pdf_utils.check_if_identifier_exists(kit_digital.word_file, "PANTALLAZOS_DIRECTORIOS"):
+                    pdf_utils.remove_identifier(kit_digital.word_file, "{PANTALLAZOS_DIRECTORIOS}")
 
         with st.expander('Plantilla recopilación de evidencias', expanded=True):
             st.write('Plantilla para recopilar las evidencias de la web')
-            with open(kit_digital.word_file_result, "rb") as f:
+            with open(kit_digital.word_file, "rb") as f:
                 st.download_button(
                     label="Descargar documento",
                     data=f,

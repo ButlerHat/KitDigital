@@ -356,7 +356,7 @@ async def run_robot(kit_digital: KitDigital, info_file: str, results_path: str):
 
     args = [
         f'WSENDPOINT:"{kit_digital.chrome_server.playwright_endpoint}"',
-        f'WORD_FILE:"{kit_digital.word_file}"',
+        # f'WORD_FILE:"{kit_digital.word_file}"',
         f'SCREENSHOT_DIR:"{results_path}"',
         f'INFO_FILE:"{info_file}"',
         f'RETURN_FILE:"{msg_csv}"',
@@ -614,16 +614,12 @@ def add_directory_manually(kit_digital: KitDigital) -> KitDigital:
                     screenshot=directory_screenshot_path
                 )
             )
-            pdf_utils.append_text_and_picture_to_document(
-                kit_digital.word_file,
-                '{PANTALLAZOS_DIRECTORIOS}',
-                f'{directory_name} - {directory_url}',
-                directory_screenshot_path
-            )
-            
+
             if len(kit_digital.stages[StageType.DIRECTORIES].info["directories"]) >= 3:
                 kit_digital.stages[StageType.DIRECTORIES].status = StageStatus.PASS
             
             kit_digital.to_yaml()
+
+            st.rerun()
 
     return kit_digital

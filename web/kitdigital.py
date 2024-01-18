@@ -41,6 +41,7 @@ class StageType(Enum):
     LOGO_KIT_DIGITAL = "LOGO_KIT_DIGITAL"
     PANTALLAZOS_URLS = "PANTALLAZOS_URLS"
     PANTALLAZOS_MULTIIDIOMA = "PANTALLAZOS_MULTIIDIOMA"
+    LAST_TOUCHES = "LAST_TOUCHES"
     RESULTS = "RESULTS"
 
     def __str__(self):
@@ -144,7 +145,6 @@ class KitDigital:
         self.cookies_dir: str = os.path.join(self.results_path, "cookies")
         self.info_file: str = os.path.join(self.results_path, "info_kit.yaml")
         self.word_file: str = os.path.join(self.results_path, "evidencias.docx")
-        self.word_file_result: str = os.path.join(self.results_path, "evidencias_result.docx")
         self.chrome_server: ChromeServer | None = None
         self.stages: dict[StageType, Stage] = {
             StageType.ACCEPT_COOKIES: Stage("Aceptación De Cookies", os.path.join(self.results_path, "accept_cookies")),
@@ -159,6 +159,7 @@ class KitDigital:
             StageType.LOGO_KIT_DIGITAL: Stage("Logo Kit Digital", os.path.join(self.results_path, "logo_kit_digital")),
             StageType.PANTALLAZOS_URLS: Stage("Pantallazos Urls", os.path.join(self.results_path, "pantallazos_urls")),
             StageType.PANTALLAZOS_MULTIIDIOMA: Stage("Pantallazos Multiidioma", os.path.join(self.results_path, "pantallazos_multiidioma")),
+            StageType.LAST_TOUCHES: Stage("Últimos retoques", os.path.join(self.results_path, "last_touches")),
             StageType.RESULTS: Stage("Resultados", os.path.join(self.results_path, "results"), StageStatus.PASS),
         }
         
@@ -212,6 +213,11 @@ class KitDigital:
         kit_digital.stages = {
             StageType(stage_name): Stage.from_dict(stage_data) for stage_name, stage_data in data["stages"].items()
         }
+
+        # Add support to LAST_TOUCHES
+        if not StageType.LAST_TOUCHES in kit_digital.stages:
+            kit_digital.stages[StageType.LAST_TOUCHES] = Stage("Últimos retoques", os.path.join(kit_digital.results_path, "last_touches"))
+        
         return kit_digital
     
     @classmethod

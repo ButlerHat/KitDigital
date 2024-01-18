@@ -53,8 +53,11 @@ def callback_crawl(ret_val: int | None, result_path: str, kwargs_callbacks: dict
             urls.append(row.msg)
         
         stage = kit_digital.stages[StageType.CRAWL_URLS]
-        stage.status = StageStatus.PASS
-        stage.info["suggested_urls"] = urls
+        if "url_multi" in kwargs_callbacks:
+            stage.info["suggested_urls_multi"] = urls
+        else:
+            stage.info["suggested_urls"] = urls
+        
         kit_digital.stages[StageType.CRAWL_URLS] = stage
         kit_digital.to_yaml()
     
@@ -66,6 +69,55 @@ def callback_crawl(ret_val: int | None, result_path: str, kwargs_callbacks: dict
         kit_digital.stages[StageType.CRAWL_URLS] = stage
         kit_digital.to_yaml()
 
+async def run_with_multi(args: list, results_path: str, kit_digital: KitDigital) -> int | None:
+    # Run robot url
+    task1 = asyncio.create_task(
+        robot_handler.run_robot(
+            "paginas", 
+            args, 
+            "KitD_Paginas.robot", 
+            output_dir=results_path,
+            callbacks=[callback_crawl],
+            kwargs_callbacks={"kit_digital": kit_digital},
+            msg_info=f"Obteniendo páginas de {kit_digital.stages[StageType.CRAWL_URLS].info['url_crawl']}. No cierre ni refresque la página, esto puede tardar de 1 a 2 minutos."
+        )
+    )
+
+    # Run robot multi
+    args_multi = [
+        arg if not arg.startswith("URL:") else f'URL:"{kit_digital.stages[StageType.CRAWL_URLS].info["url_multi"]}"' 
+        for arg in args 
+    ]
+    # Change id_execution
+    id_execution = int(datetime.datetime.now().strftime("%Y%m%d%H%M%S")) + 1
+    args_multi = [
+        arg if not arg.startswith("ID_EXECUTION:") else f'ID_EXECUTION:"{id_execution}"'
+        for arg in args_multi 
+    ]
+
+    task2 = asyncio.create_task(
+        robot_handler.run_robot(
+            "paginas_multi", 
+            args_multi, 
+            "KitD_Paginas.robot", 
+            output_dir=results_path,
+            callbacks=[callback_crawl],
+            kwargs_callbacks={
+                "kit_digital": kit_digital,
+                "url_multi": True    
+            },
+            msg_info=f"Obteniendo páginas de {kit_digital.stages[StageType.CRAWL_URLS].info['url_multi']}. No cierre ni refresque la página, esto puede tardar de 1 a 2 minutos."
+        )
+    )
+
+    # Wait for both tasks to complete
+    await asyncio.gather(task1, task2)
+    
+    # Mark pass if suggested_urls and suggested_urls_multi are not empty
+    if len(kit_digital.stages[StageType.CRAWL_URLS].info.get("suggested_urls", [])) > 0 and \
+        len(kit_digital.stages[StageType.CRAWL_URLS].info.get("suggested_urls_multi", [])) > 0:
+        kit_digital.stages[StageType.CRAWL_URLS].status = StageStatus.PASS
+        kit_digital.to_yaml()
 
 def run_robot(kit_digital: KitDigital, results_path: str) -> int | None:
     
@@ -76,6 +128,7 @@ def run_robot(kit_digital: KitDigital, results_path: str) -> int | None:
     if not kit_digital.chrome_server:
         raise Exception("No se ha podido crear el navegador. No hay id_ o novnc_endpoint en la respuesta.")
 
+    # Run robot url
     args = [
         f'WSENDPOINT:"{kit_digital.chrome_server.playwright_endpoint}"',
         f'URL:"{kit_digital.stages[StageType.CRAWL_URLS].info["url_crawl"]}"',
@@ -84,17 +137,34 @@ def run_robot(kit_digital: KitDigital, results_path: str) -> int | None:
         f'FILTER_ENDING:"{kit_digital.stages[StageType.CRAWL_URLS].info["filter_ending"]}"'
     ]
 
-    ret_code = asyncio.run(robot_handler.run_robot(
-        "paginas", 
-        args, 
-        "KitD_Paginas.robot", 
-        output_dir=results_path,
-        callbacks=[callback_crawl, notifications.callback_notify],
-        kwargs_callbacks={"kit_digital": kit_digital},
-        msg_info=f"Obteniendo páginas de {kit_digital.stages[StageType.CRAWL_URLS].info['url_crawl']}. No cierre ni refresque la página, esto puede tardar de 1 a 2 minutos."
-    ))
-
-    return ret_code
+    # Url and multi
+    if "url_multi" in kit_digital.stages[StageType.CRAWL_URLS].info:
+        asyncio.run(run_with_multi(args, results_path, kit_digital))
+        # Mark pass if suggested_urls and suggested_urls_multi are not empty
+        if len(kit_digital.stages[StageType.CRAWL_URLS].info.get("suggested_urls", [])) > 0 and \
+            len(kit_digital.stages[StageType.CRAWL_URLS].info.get("suggested_urls_multi", [])) > 0:
+            kit_digital.stages[StageType.CRAWL_URLS].status = StageStatus.PASS
+            kit_digital.to_yaml()
+        
+        return None
+    
+    # Only url
+    else:
+        ret_code = asyncio.run(robot_handler.run_robot(
+            "paginas", 
+            args, 
+            "KitD_Paginas.robot", 
+            output_dir=results_path,
+            callbacks=[callback_crawl, notifications.callback_notify],
+            kwargs_callbacks={"kit_digital": kit_digital},
+            msg_info=f"Obteniendo páginas de {kit_digital.stages[StageType.CRAWL_URLS].info['url_crawl']}. No cierre ni refresque la página, esto puede tardar de 1 a 2 minutos."
+        ))
+        # Mark pass if suggested_urls are not empty
+        if len(kit_digital.stages[StageType.CRAWL_URLS].info.get("suggested_urls", [])) > 0:
+            kit_digital.stages[StageType.CRAWL_URLS].status = StageStatus.PASS
+            kit_digital.to_yaml()
+        
+        return ret_code
 
 
 def crawl_urls(kit_digital: KitDigital) -> KitDigital:
@@ -110,19 +180,22 @@ def crawl_urls(kit_digital: KitDigital) -> KitDigital:
     kit_digital.stages[StageType.CRAWL_URLS].info["url_crawl"] = kit_digital.url
     kit_digital.stages[StageType.CRAWL_URLS].info["filter_ending"] = True
     url_selected = False
-    with st.form("Url a parti de donde buscar"):
+    with st.form("Urls a partir de donde buscar"):
         url: str = st.text_input("Url a parti de donde buscar", value=kit_digital.url)
+        multi = 'en' if kit_digital.url.endswith('/') else '/en'
+        url_multi = st.text_input("Url multi (No es obligatorio, pero agiliza el proceso en el paso 8)", placeholder=kit_digital.url + multi)
         st.info("Filtrar por extensión puede ser útil para páginas que tienen muchos enlaces. Puedes probar primero sin filtrar y reiniciar el stage.")
         filter_ending: bool = st.checkbox("Filtrar por extensión", value=False)
         if st.form_submit_button("Enviar"):
             kit_digital.stages[StageType.CRAWL_URLS].info["url_crawl"] = url
             kit_digital.stages[StageType.CRAWL_URLS].info["filter_ending"] = filter_ending
+            if url_multi != '':
+                kit_digital.stages[StageType.CRAWL_URLS].info["url_multi"] = url_multi
             kit_digital.to_yaml()
             url_selected = True
     
     if url_selected:
         # Get Browser
-        kit_digital = remote_browser.get_browser(kit_digital, remote_browser.ChromeType.PLAYWRIGHT)
         run_robot(kit_digital, urls_stage.results_path)  # Here store kit digital to yaml
 
     # Refresh kit digital
@@ -141,16 +214,46 @@ def select_urls(kit_digital: KitDigital) -> KitDigital:
     # Ask for valid urls
     if kit_digital.stages[StageType.CRAWL_URLS].status == StageStatus.PASS:
         st.success("El orden en el que se eligen las urls es importante. Es el orden con el que saldrán los pantallazos para la justificación. Poner la pantalla principal primero.")
-        suggested_urls = kit_digital.stages[StageType.CRAWL_URLS].info["suggested_urls"]
-        st.markdown("### Selecciona las urls válidas")
-        with st.form("Selecciona las urls válidas"):
-            urls = st.multiselect("Selecciona las urls válidas", suggested_urls)
-            if st.form_submit_button("Enviar"):
-                stage = kit_digital.stages[StageType.SELECT_URLS]
-                stage.status = StageStatus.PASS
-                stage.info["urls"] = urls
-                kit_digital.stages[StageType.SELECT_URLS] = stage
-                kit_digital.to_yaml()
+        
+        if not kit_digital.stages[StageType.SELECT_URLS].info.get("urls", []):
+            suggested_urls = kit_digital.stages[StageType.CRAWL_URLS].info["suggested_urls"]
+            st.markdown("### Selecciona las urls válidas")
+            with st.form("Selecciona las urls válidas"):
+                urls = st.multiselect("Selecciona las urls válidas", suggested_urls)
+                if st.form_submit_button("Enviar"):
+                    stage = kit_digital.stages[StageType.SELECT_URLS]
+                    stage.info["urls"] = urls
+                    kit_digital.stages[StageType.SELECT_URLS] = stage
+                    kit_digital.to_yaml()
+        else:
+            st.write(kit_digital.stages[StageType.SELECT_URLS].info["urls"])
+        
+        # Ask for valid multi urls
+        if "url_multi" in kit_digital.stages[StageType.CRAWL_URLS].info:
+            if not kit_digital.stages[StageType.SELECT_URLS].info.get("urls_multi", []):
+                st.markdown("### Selecciona las urls válidas multi")
+                with st.form("Selecciona las urls válidas multi"):
+                    urls_multi = st.multiselect("Selecciona las urls válidas multi", kit_digital.stages[StageType.CRAWL_URLS].info["suggested_urls_multi"])
+                    if st.form_submit_button("Enviar"):
+                        stage = kit_digital.stages[StageType.SELECT_URLS]
+                        stage.info["urls_multi"] = urls_multi
+                        kit_digital.stages[StageType.SELECT_URLS] = stage
+                        kit_digital.to_yaml()
+            else:
+                st.write(kit_digital.stages[StageType.SELECT_URLS].info["urls_multi"])
+                
+        
+        # PASS if urls and urls_multi are not empty
+        if len(kit_digital.stages[StageType.SELECT_URLS].info.get("urls", [])) > 0 and \
+            len(kit_digital.stages[StageType.SELECT_URLS].info.get("urls_multi", [])) > 0:
+            kit_digital.stages[StageType.SELECT_URLS].status = StageStatus.PASS
+            kit_digital.to_yaml()
+        
+        # PASS if urls is not empty and not url_multi
+        if "url_multi" not in kit_digital.stages[StageType.CRAWL_URLS].info and \
+            len(kit_digital.stages[StageType.SELECT_URLS].info.get("urls", [])) > 0:
+            kit_digital.stages[StageType.SELECT_URLS].status = StageStatus.PASS
+            kit_digital.to_yaml()
 
     else:
         st.warning("Se deben obtener las urls de la página previamente.")
