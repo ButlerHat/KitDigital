@@ -69,10 +69,10 @@ def get_create_kit_digital() -> KitDigital:
     
     kit_d = None
     # Check if came from stripe
-    url_params: dict = st.experimental_get_query_params()
+    url_params = st.query_params
     
     if "uid" in url_params and "kdid" in url_params:
-        url: str = firebase.check_user_and_kit(url_params["uid"][0], url_params["kdid"][0])
+        url: str = firebase.check_user_and_kit(url_params["uid"], url_params["kdid"])
         if not url:
             st.error("Algo salió mal. Contacte con nosotros")
             st.stop()

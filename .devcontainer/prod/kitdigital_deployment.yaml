@@ -86,18 +86,18 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: cloudflared
+    app: cloudflared-deployment-kitdigital-prod
   name: cloudflared-deployment-kitdigital-prod
   namespace: default
 spec:
   replicas: 1
   selector:
     matchLabels:
-      pod: cloudflared
+      pod: cloudflared-deployment-kitdigital-prod
   template:
     metadata:
       labels:
-        pod: cloudflared
+        pod: cloudflared-deployment-kitdigital-prod
     spec:
       containers:
       - command:

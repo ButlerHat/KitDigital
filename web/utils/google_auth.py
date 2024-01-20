@@ -18,7 +18,7 @@ def get_access_token_from_cookie() -> str:
 
 
 def button_click_action():
-    query_params = st.experimental_get_query_params()
+    query_params = st.query_params
     if "code" in query_params:
         code_values = query_params.get("code")
         if isinstance(code_values, list):

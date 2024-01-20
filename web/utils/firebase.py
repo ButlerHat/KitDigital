@@ -34,12 +34,12 @@ def check_user_and_kit(user_id, kit_id) -> str:
     user_ref = db.collection('kit_digitals').document(user_id)
     user_doc = user_ref.get()
     if user_doc.exists:
-        print('User ID exists.')
+        # print('User ID exists.')
         # If user exists, check if kit digital ID exists within 'kit_digitals'
         kit_ref = user_ref.collection('kit_digitals').document(kit_id)
         kit_doc = kit_ref.get()
         if kit_doc.exists:
-            print('Kit digital ID exists.')
+            # print('Kit digital ID exists.')
             # Get website url from 
             return kit_doc.to_dict()['website']
         else:
