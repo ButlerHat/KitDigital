@@ -32,5 +32,19 @@
                 "oauth.py"
             ],
         },
+        {
+            "name": "Python: Streamlit Firebase",
+            "type": "python",
+            "request": "launch",
+            "program": "/opt/conda/envs/web_env/bin/streamlit",
+            "python": "/opt/conda/envs/web_env/bin/python",
+            "console": "integratedTerminal",
+            "cwd": "/workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSuites/KitDigital/web",
+            "args": [
+                // "run", "-n", "web_env", "",
+                "run",
+                "utils/firebase.py"
+            ],
+        },
     ]
 }

@@ -173,3 +173,6 @@ artifacts/
 TestSuites/CicloZero/conda_pass.yml
 TestSuites/CicloZero/jobs/stock.sh
 return_msg.txt
+.devcontainer/prod/cloudflare_secret_iframe.yml
+web/.streamlit/paypaya-platform-firebase-adminsdk-brtic-fef459e6f4.json
+web/.streamlit/firebase_json_as_env.txt

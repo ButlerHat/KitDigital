@@ -18,3 +18,5 @@ dependencies:
       - fpdf  # For image -> pdf
       - python-docx # Remove placeholders
       - streamlit-drawable-canvas
+      - firebase-admin
+

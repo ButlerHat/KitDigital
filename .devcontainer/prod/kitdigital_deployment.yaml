@@ -115,7 +115,7 @@ spec:
         - name: TUNNEL-TOKEN
           valueFrom:
             secretKeyRef:
-              name: cloudflared-token-kitdigital-prod
+              name: cloudflared-token-kitdigital-iframe-prod
               key: token
         resources:
           limits:

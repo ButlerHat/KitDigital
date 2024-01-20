@@ -2,6 +2,7 @@ from typing import List
 import requests
 import streamlit as st
 import utils.remote_browser as remote_browser
+import utils.firebase as firebase
 import extra_streamlit_components as stx
 from stages.accept_cookies import accept_cookies
 from stages.directories import directories, add_directory_manually, support_legacy_directories
@@ -59,6 +60,7 @@ def get_create_kit_digital() -> KitDigital:
     """
     Get or create a KitDigital object from yaml.
     """
+
     if hasattr(st.session_state, "url") and st.session_state.url:
         url = st.session_state.url
         kit_d = KitDigital.get_kit_digital(url)
@@ -66,42 +68,51 @@ def get_create_kit_digital() -> KitDigital:
             return kit_d
     
     kit_d = None
-    placeholder = st.empty()
-    with placeholder.form("Obtener urls"):
-        st.info("La url debe ser la página principal del dominio. Debe contener el prefijo http o https.")
-        st.write("Proporciona la url del dominio")
-        url = st.text_input("URL")
-
-        if st.form_submit_button("Enviar"):
-            # Check if url is valid
-            if not url.startswith("http"):
-                st.error("La url debe empezar por http o https.")
-                st.stop()
-
-            st.session_state.url = url
-            # Create directory for results for this url
-            kit_d = KitDigital.get_kit_digital(url)
-
-            if not kit_d:
-                kit_d = KitDigital(url)
-                requests.post(
-                    "https://notifications.paipaya.com/kit_digital",
-                    headers={
-                        "X-Email": "paipayainfo@gmail.com",
-                        "Tags": "white_check_mark"
-                    },
-                    data=f"Nuevo Kit: {url}.",
-                    timeout=15
-                )
-
-    if not kit_d:
-        st.stop()
-    else:
-        placeholder.empty()
+    # Check if came from stripe
+    url_params: dict = st.experimental_get_query_params()
     
-    assert kit_d is not None, "No se ha podido crear el kit digital."
-    return kit_d
+    if "uid" in url_params and "kdid" in url_params:
+        url: str = firebase.check_user_and_kit(url_params["uid"][0], url_params["kdid"][0])
+        if not url:
+            st.error("Algo salió mal. Contacte con nosotros")
+            st.stop()
+        
+        st.session_state.url = url
 
+        # Create directory for results for this url
+        kit_d = KitDigital.get_kit_digital(url)
+
+        if not kit_d:
+            kit_d = KitDigital(url)
+            requests.post(
+                "https://notifications.paipaya.com/kit_digital",
+                headers={
+                    "X-Email": "paipayainfo@gmail.com",
+                    "Tags": "white_check_mark"
+                },
+                data=f"Nuevo Kit: {url}.",
+                timeout=15
+            )
+
+    else:
+        print("No informacion de la url")
+        st.error("Permission denied. Access to https://kitdigital.paipaya.com. If problem pressist, contact with us.")
+        requests.post(
+                "https://notifications.paipaya.com/kit_digital_fail",
+                headers={
+                    "X-Email": "paipayainfo@gmail.com"
+                },
+                data=f"Se ha intentado acceder directamente sin query params.",
+                timeout=15
+            )
+        st.stop()
+    
+    if kit_d is None or not isinstance(kit_d, KitDigital):    
+        st.error("No se ha podido crear el kit digital.")
+        st.stop()
+        raise Exception("No se ha podido crear el kit digital.")
+    
+    return kit_d
 
 def display_title(msg: str, status: StageStatus):
     """
@@ -122,24 +133,28 @@ def display_title(msg: str, status: StageStatus):
 
     st.markdown(f'# {status_msg} {msg}', unsafe_allow_html=True)
 
+
 st.set_page_config(
     page_title="Kit Digital",
     page_icon=":robot:",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
+# Initialize firebase
+firebase.inicialize_app()
 
-with st.sidebar:
-    logo_path = st.secrets["paths"]["logo_path"]
-    st.image(logo_path)
-    st.write("Paipaya © 2023")
-    with st.expander("Contacto", expanded=False):
-        st.markdown("# Soluciones con inteligencia artificial")
-        st.markdown("Contacte con nosotros: d.correas.oliver@gmail.com")
+
+# with st.sidebar:
+#     logo_path = st.secrets["paths"]["logo_path"]
+#     st.image(logo_path)
+#     st.write("Paipaya © 2023")
+#     with st.expander("Contacto", expanded=False):
+#         st.markdown("# Soluciones con inteligencia artificial")
+#         st.markdown("Contacte con nosotros: d.correas.oliver@gmail.com")
 
 title_placeholder = st.empty()
-title_placeholder.markdown("# Kit Digital (Beta)")
+title_placeholder.markdown("# Kit Digital")
 
 st.markdown("---")
 
@@ -176,8 +191,8 @@ if val == 0:
         restart_stage(kit_digital, StageType.ACCEPT_COOKIES)
         restart_browser(kit_digital)
 
-    st.sidebar.markdown("# Información del paso")
-    st.sidebar.success('El objetivo de este paso es aceptar las cookies para que no aparezcan los popups de cookies en los pantallazos.')
+    # st.sidebar.markdown("# Información del paso")
+    # st.sidebar.success('El objetivo de este paso es aceptar las cookies para que no aparezcan los popups de cookies en los pantallazos.')
     
     if kit_digital.stages[StageType.ACCEPT_COOKIES].status != StageStatus.PASS:
         kit_digital = accept_cookies(kit_digital)
@@ -195,8 +210,8 @@ if val == 1:
     with col2:
         restart_stage(kit_digital, StageType.CRAWL_URLS, optional_stages=[StageType.SELECT_URLS])
 
-    st.sidebar.markdown("# Información del paso")
-    st.sidebar.success('El objetivo de este paso es obtener las urls de la página y seleccionar las urls a las que se harán pantallazos. Deben de estar las urls que representen el menú de opciones de la página creada (home, contactos, blog, etc.).')
+    # st.sidebar.markdown("# Información del paso")
+    # st.sidebar.success('El objetivo de este paso es obtener las urls de la página y seleccionar las urls a las que se harán pantallazos. Deben de estar las urls que representen el menú de opciones de la página creada (home, contactos, blog, etc.).')
 
     if kit_digital.stages[StageType.CRAWL_URLS].status != StageStatus.PASS:
         kit_digital = crawl_urls(kit_digital)
@@ -235,8 +250,8 @@ if val == 2:
     with col1:
         display_title("Subir directorios", kit_digital.stages[StageType.DIRECTORIES].status)
 
-    st.sidebar.markdown("# Información del paso")
-    st.sidebar.success('El objetivo de este paso es posicionar la página en la web. Para ello, se sube la información del cliente y la url de la página en 3 directorios.')
+    # st.sidebar.markdown("# Información del paso")
+    # st.sidebar.success('El objetivo de este paso es posicionar la página en la web. Para ello, se sube la información del cliente y la url de la página en 3 directorios.')
 
     if not "directories" in kit_digital.stages[StageType.DIRECTORIES].info:
         kit_digital.stages[StageType.DIRECTORIES].info["directories"] = []
@@ -278,8 +293,8 @@ if val == 3:
     with col2:
         restart_stage(kit_digital, StageType.SEO_BASICO)
 
-    st.sidebar.markdown("# Información del paso")
-    st.sidebar.success('El objetivo de este paso es redactar el texto con el que se justificará que se ha hecho un posicionamiento SEO en la página.')
+    # st.sidebar.markdown("# Información del paso")
+    # st.sidebar.success('El objetivo de este paso es redactar el texto con el que se justificará que se ha hecho un posicionamiento SEO en la página.')
 
     if kit_digital.stages[StageType.SEO_BASICO].status != StageStatus.PASS:
         kit_digital = set_seo_basico(kit_digital)
@@ -319,8 +334,8 @@ if val == 5:
     with col2:
         restart_stage(kit_digital, StageType.LOGO_KIT_DIGITAL)
 
-    st.sidebar.markdown("# Información del paso")
-    st.sidebar.success('El objetivo de este paso es hacer un pantallazo sobre el logo del kit digital y la unión europea dentro de la página. Es recomendable señalar en un recuadro el logo, por lo que es necesario marcarlo con el ratón y después guardarlo.')
+    # st.sidebar.markdown("# Información del paso")
+    # st.sidebar.success('El objetivo de este paso es hacer un pantallazo sobre el logo del kit digital y la unión europea dentro de la página. Es recomendable señalar en un recuadro el logo, por lo que es necesario marcarlo con el ratón y después guardarlo.')
 
     if kit_digital.stages[StageType.ACCEPT_COOKIES].status != StageStatus.PASS:
         st.warning("Complete el paso 1 (aceptar las cookies) antes de continuar. Sirve para que no aparezcan los popups de cookies en los pantallazos.")
@@ -360,8 +375,8 @@ if val == 6:
     with col2:
         restart_stage(kit_digital, StageType.PANTALLAZOS_URLS)
 
-    st.sidebar.markdown("# Información del paso")
-    st.sidebar.success('El objetivo de este paso es hacer un pantallazo de las urls seleccionadas.')
+    # st.sidebar.markdown("# Información del paso")
+    # st.sidebar.success('El objetivo de este paso es hacer un pantallazo de las urls seleccionadas.')
 
     stop = False
     if kit_digital.stages[StageType.ACCEPT_COOKIES].status != StageStatus.PASS:
@@ -406,8 +421,8 @@ if val == 7:
     with col2:
         restart_stage(kit_digital, StageType.PANTALLAZOS_MULTIIDIOMA)
 
-    st.sidebar.markdown("# Información del paso")
-    st.sidebar.success('El objetivo de este paso es hacer un pantallazo de las urls seleccionadas en multi-idioma. Se debe de cambiar el idioma manualmente en el navegador.')
+    # st.sidebar.markdown("# Información del paso")
+    # st.sidebar.success('El objetivo de este paso es hacer un pantallazo de las urls seleccionadas en multi-idioma. Se debe de cambiar el idioma manualmente en el navegador.')
 
     stop = False
     if kit_digital.stages[StageType.ACCEPT_COOKIES].status != StageStatus.PASS:
@@ -456,8 +471,8 @@ if val == 8:
     with col2:
         restart_stage(kit_digital, StageType.LAST_TOUCHES)
 
-    st.sidebar.markdown("# Información del paso")
-    st.sidebar.success('El objetivo de este paso es completar información que faltaría para tener todo subido en la plataforma.')
+    # st.sidebar.markdown("# Información del paso")
+    # st.sidebar.success('El objetivo de este paso es completar información que faltaría para tener todo subido en la plataforma.')
 
     if kit_digital.stages[StageType.LAST_TOUCHES].status != StageStatus.PASS:
         rerun_later = True

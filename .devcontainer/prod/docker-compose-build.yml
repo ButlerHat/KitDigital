@@ -11,4 +11,5 @@ services:
         GROUP_ID: ${GROUP_ID}
         PYPI_USER: ${PYPI_USER}
         PYPI_PASS: ${PYPI_PASS}
+        FIREBASE_CONFIG_BASE64: ${FIREBASE_CONFIG_BASE64}
       # target: prod

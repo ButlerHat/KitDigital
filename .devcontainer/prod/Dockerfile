@@ -3,6 +3,7 @@ FROM mcr.microsoft.com/devcontainers/miniconda:0-3
 ARG UNAME=vscode
 ARG PYPI_USER
 ARG PYPI_PASS
+ARG FIREBASE_CONFIG_BASE64
 
 # Change timezone
 ENV TZ='/usr/share/zoneinfo/Europe/Madrid'
@@ -45,6 +46,9 @@ WORKDIR /workspaces/ai-butlerhat/data-butlerhat/robotframework-butlerhat/TestSui
 
 # Set prod secrets
 RUN rm web/.streamlit/secrets.toml && cp web/.streamlit/secrets.prod.toml web/.streamlit/secrets.toml
+
+# Set firebase config
+ENV FIREBASE_CONFIG_BASE64=$FIREBASE_CONFIG_BASE64
 
 CMD ["bash", "./.devcontainer/prod/postCreateCommand.sh"]
 

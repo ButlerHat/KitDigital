@@ -242,18 +242,12 @@ def delete_browser_after_stage(kit_digital: KitDigital) -> KitDigital:
     try:
         with st.spinner("Eliminando navegador..."):
             destroy_browser(kit_digital.chrome_server.id_)
-            kit_digital.chrome_server = None
-            kit_digital.to_yaml()
+
     except Exception as e:
-        requests.post(
-            "https://notifications.paipaya.com/kit_digital_fail",
-            headers={
-                "X-Email": "paipayainfo@gmail.com",
-                "Tags": "warning"
-            },
-            data=f"Fallo en orchestrator. Nos e ha podido eliminar el navegador: {e}",
-            timeout=15
-        )
+        print("No se ha podido eliminar el navegador: " + str(e))
+    
+    kit_digital.chrome_server = None
+    kit_digital.to_yaml()
     
     return kit_digital
 
