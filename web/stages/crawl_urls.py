@@ -183,7 +183,7 @@ def crawl_urls(kit_digital: KitDigital) -> KitDigital:
     with st.form("Urls a partir de donde buscar"):
         url: str = st.text_input("Url a parti de donde buscar", value=kit_digital.url)
         multi = 'en' if kit_digital.url.endswith('/') else '/en'
-        url_multi = st.text_input("Url multi (No es obligatorio, pero agiliza el proceso en el paso 8)", placeholder=kit_digital.url + multi)
+        url_multi = st.text_input("Url multi-idioma (No es obligatorio, pero agiliza el proceso en el paso 8)", placeholder=kit_digital.url + multi)
         st.info("Filtrar por extensión puede ser útil para páginas que tienen muchos enlaces. Puedes probar primero sin filtrar y reiniciar el stage.")
         filter_ending: bool = st.checkbox("Filtrar por extensión", value=False)
         if st.form_submit_button("Enviar"):
@@ -231,9 +231,9 @@ def select_urls(kit_digital: KitDigital) -> KitDigital:
         # Ask for valid multi urls
         if "url_multi" in kit_digital.stages[StageType.CRAWL_URLS].info:
             if not kit_digital.stages[StageType.SELECT_URLS].info.get("urls_multi", []):
-                st.markdown("### Selecciona las urls válidas multi")
+                st.markdown("### Selecciona las urls válidas multi-idioma")
                 with st.form("Selecciona las urls válidas multi"):
-                    urls_multi = st.multiselect("Selecciona las urls válidas multi", kit_digital.stages[StageType.CRAWL_URLS].info["suggested_urls_multi"])
+                    urls_multi = st.multiselect("Selecciona las urls válidas multi-idioma", kit_digital.stages[StageType.CRAWL_URLS].info["suggested_urls_multi"])
                     if st.form_submit_button("Enviar"):
                         stage = kit_digital.stages[StageType.SELECT_URLS]
                         stage.info["urls_multi"] = urls_multi

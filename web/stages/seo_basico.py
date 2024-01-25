@@ -51,14 +51,14 @@ def set_seo_basico(kit_digital: KitDigital) -> KitDigital:
             kit_digital.stages[StageType.SEO_BASICO].status = StageStatus.PROGRESS
             kit_digital.to_yaml()
 
-            intro = f'Hemos elaborado un análisis de palabras clave relacionadas con "{company_name}" en {city}, se ha llevado a cabo utilizando la plataforma Sixtrix.com. Se han estudiado todas las palabras clave pertinentes para un entendimiento profundo del negocio.'
+            intro = f'Hemos elaborado un análisis de palabras clave relacionadas con "{company_name}" en {city}, se ha llevado a cabo utilizando la plataforma Sixtrix.com. Se han estudiado todas las palabras clave pertinentes para un entendimiento profundo del negocio.\n'
             keywords_template = """
-Palabras clave: {keyword}\n
-Búsquedas mensuales: {month_search}\n
-Competitividad: {competitiveness}\n
---\n
+Palabras clave: {keyword}
+Búsquedas mensuales: {month_search}
+Competitividad: {competitiveness}
+--
 """
-            plugin_rankmath: str = "Hemos instalado el plugin Rankmath, una herramienta versátil que facilita la realización de todas las tareas SEO, incluyendo el análisis de legibilidad, la optimización de títulos y mucho más."
+            plugin_rankmath: str = "\nHemos instalado el plugin Rankmath, una herramienta versátil que facilita la realización de todas las tareas SEO, incluyendo el análisis de legibilidad, la optimización de títulos y mucho más."
 
             text_after_headers = """
 Y así con todas las páginas de la web para que Google vea cuáles son las palabras clave que más le interesa al cliente posicionar.
@@ -80,7 +80,7 @@ Hemos instalado el plugin en WordPress de traducción TranslatePress - Multiling
                 "company_name": company_name,
                 "city": city,
                 "keywords": ",".join([st.session_state[f"keyword_{i}"] for i in range(len(keywords_list))]),
-                "text_before_headers": "\n".join([
+                "text_before_headers": "".join([
                     intro, 
                     *[keywords_template.format(
                         keyword=st.session_state[f"keyword_{i}"],

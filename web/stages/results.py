@@ -117,7 +117,7 @@ def show_results(kit_digital: KitDigital):
 
             # Insert urls screenshots
             if kit_digital.stages[StageType.PANTALLAZOS_URLS].info.get("screenshots", None):
-                for i, screenshot in enumerate(kit_digital.stages[StageType.PANTALLAZOS_URLS].info["screenshots"]):
+                for i, screenshot in enumerate(kit_digital.stages[StageType.PANTALLAZOS_URLS].info["screenshots"], start=1):
                     pdf_utils.append_text_and_picture_to_document(kit_digital.word_file, "{PANTALLAZOS_WEB}", f"Página {i}.", screenshot)
                 if pdf_utils.check_if_identifier_exists(kit_digital.word_file, "PANTALLAZOS_WEB"):
                     pdf_utils.remove_identifier(kit_digital.word_file, "{PANTALLAZOS_WEB}")
@@ -145,7 +145,7 @@ def show_results(kit_digital: KitDigital):
 
             # Insert multiidioma screenshots
             if kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].info.get("screenshots", None):
-                for i, screenshot in enumerate(kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].info["screenshots"]):
+                for i, screenshot in enumerate(kit_digital.stages[StageType.PANTALLAZOS_MULTIIDIOMA].info["screenshots"], start=1):
                     pdf_utils.append_text_and_picture_to_document(kit_digital.word_file, "{PANTALLAZOS_MULTI-IDIOMA}", f"Página {i}.", screenshot)
                 if pdf_utils.check_if_identifier_exists(kit_digital.word_file, "PANTALLAZOS_MULTI-IDIOMA"):
                     pdf_utils.remove_identifier(kit_digital.word_file, "{PANTALLAZOS_MULTI-IDIOMA}")
@@ -156,6 +156,18 @@ def show_results(kit_digital: KitDigital):
                     pdf_utils.append_text_and_picture_to_document(kit_digital.word_file, "{PANTALLAZOS_DIRECTORIOS}", directory.get("name", ""), directory.get("screenshot", ""))
                 if pdf_utils.check_if_identifier_exists(kit_digital.word_file, "PANTALLAZOS_DIRECTORIOS"):
                     pdf_utils.remove_identifier(kit_digital.word_file, "{PANTALLAZOS_DIRECTORIOS}")
+
+            # Insert multiidioma justification
+            if kit_digital.stages[StageType.LAST_TOUCHES].info.get("justificacion_multi", None):
+                for info in kit_digital.stages[StageType.LAST_TOUCHES].info["justificacion_multi"]:
+                    if os.path.exists(info):
+                        pdf_utils.append_text_and_picture_to_document(kit_digital.word_file, "{JUSTIFICACION_MULTI}", "", info)
+                    else:
+                        pdf_utils.append_text_and_picture_to_document(kit_digital.word_file, "{JUSTIFICACION_MULTI}", info, "")
+                
+                if pdf_utils.check_if_identifier_exists(kit_digital.word_file, "JUSTIFICACION_MULTI"):
+                    pdf_utils.remove_identifier(kit_digital.word_file, "{JUSTIFICACION_MULTI}")
+
 
         with st.expander('Plantilla recopilación de evidencias', expanded=True):
             st.write('Plantilla para recopilar las evidencias de la web')

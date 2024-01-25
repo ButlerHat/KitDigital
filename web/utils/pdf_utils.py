@@ -84,10 +84,13 @@ def append_text_and_picture_to_document(filename, identificador, text, picture, 
                     else:
                         pic_run = pic_paragraph.add_run()
                     pic_run.add_picture(picture, width=Inches(width_inches))
+                # Code done with chatgpt and bullshit, but works
                 else:
                     if text:
-                        run.add_run(text)
-                        run.add_break(WD_BREAK.LINE)
+                        pic_paragraph = paragraph.insert_paragraph_before()
+                        if text:
+                            pic_run = pic_paragraph.add_run(text)
+                            pic_run.add_break(WD_BREAK.LINE)
                 
                 # Add a new run after the picture with the identifier and any text following it
                 paragraph.add_run(identificador + post_text)
@@ -102,7 +105,6 @@ def append_text_and_picture_to_document(filename, identificador, text, picture, 
         raise AssertionError(f"No se ha encontrado el identificador {identificador} en el documento {filename}")
 
     doc.save(filename)
-
 
 
 def remove_identifier(filename, identificador):
