@@ -43,7 +43,7 @@ ${province_dondeestamos}  Madrid
 Get Localidad
     [Tags]  get_localidad
 
-    ${old_timeout}  Set Browser Timeout    60
+    ${old_timeout}  Set Browser Timeout    20
 
     ${variables}  Get Variables
     ${is_WSENDPOINT}   Evaluate   "\${WSENDPOINT}" in $variables
@@ -69,6 +69,9 @@ Get Localidad
     Write ${localidad_password} in contraseña
     Click on login
 
+    # Consent cookies
+    Run Keyword And Ignore Error  Click on consent cookies
+
     @{options}  Get Localidad from ${province_dondeestamos}
     ${options_no_commas}  Evaluate  "${options}".replace(',', ';')
     
@@ -80,7 +83,7 @@ dondeestamos
     [Tags]  dondeestamos
     # ${username}  Evaluate  f'${username}{random.randint(0, 9)}{random.randint(0, 9)}{random.randint(0, 9)}{random.randint(0, 9)}'  modules=random
 
-    ${old_timeout}  Set Browser Timeout    60
+    ${old_timeout}  Set Browser Timeout    20
 
     ${variables}  Get Variables
     ${is_WSENDPOINT}   Evaluate   "\${WSENDPOINT}" in $variables
@@ -108,6 +111,9 @@ dondeestamos
     Type ${password} in password
     Type ${password} in repeat password
     Submit
+
+    # Consent cookies
+    Run Keyword And Ignore Error  Click on consent cookies
 
     Comment  Email in use
     TRY
@@ -164,6 +170,9 @@ dondeestamos
 
 Accept cookies
     Browser.Click  //a[@class='cc-btn cc-dismiss']
+
+Click on consent cookies
+    Browser.Click  //button/*[text()='Consent']
 
 Click on registrarse
     Browser.Click  //a[contains(@class, 'btn-info')]

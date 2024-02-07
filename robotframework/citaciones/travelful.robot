@@ -89,6 +89,8 @@ travelful
     Set Viewport Size  1920  1080
     Run Keyword And Ignore Error  Scroll By  vertical=100%
     Run Keyword And Ignore Error  Scroll To Element  //h1
+    # Consent cookies
+    Run Keyword And Ignore Error  Click on consent cookies
     Take Screenshot  filename=${SCREENSHOT_DIR}${/}travelful.png
     
     # Append Text And Picture To Document    ${WORD_FILE}  {PANTALLAZOS_DIRECTORIOS}   Travelful: ${url_result}    ${SCREENSHOT_DIR}${/}travelful.png
@@ -96,6 +98,9 @@ travelful
 
 
 *** Keywords ***
+
+Click on consent cookies
+    Browser.Click  //button/*[text()='Consent']
 
 Get public url
     ${url_result}  Get Url
