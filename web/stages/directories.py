@@ -111,6 +111,12 @@ def get_robot_variables(kit_digital: KitDigital, dondeestamos_province: str) -> 
     st.markdown("### Datos para subir a los directorios")
     with st.form("Datos para subir a los directorios"):
         st.write("Proporciona los datos del usuario con el que registrarse")
+
+        st.info("Este campo no se rellenará automáticamente con el excel.")
+        sector_categories = ['Abogados', 'Aeronautica', 'Agropecuaria', 'Alimentación y bebidas', 'Animales', 'Arquitectura', 'Artes gráficas e Imprentas', 'Artesanía', 'Asesoría', 'Asociaciones profesionales', 'Audiovisuales', 'Automoción', 'Banca', 'Bazar', 'Carpinteria', 'Centros asistenciales', 'Centros Medicos', 'Cerrajerias', 'Climatizacion', 'Construcción e Inmobiliaria', 'Consultoria', 'Distribución', 'Electricidad', 'Electrodomésticos', 'Energias Renovables', 'Enseñanza', 'Envases y Embalajes', 'Equipamiento industrial', 'Extracciones minerales', 'Ferreterías', 'Fontanerías', 'Formación', 'Fumigación', 'Guarderias', 'Hostelería y Restauración', 'Hoteles', 'Industria', 'Informática y Electrónica', 'Ingeniería', 'Jugueterías', 'Laboratorios', 'Limpieza', 'Medio Ambiente', 'Metalurgia', 'Mobiliario y Decoración', 'Moda', 'Ocio infantil', 'Ocio y Deportes', 'Otros', 'Pinturas', 'Piscinas', 'Publicidad', 'Químico', 'Reciclados', 'Reciclaje', 'Salud y Belleza', 'Seguridad', 'Seguros', 'Servicios', 'Servicios públicos', 'Suministros Indsutriales', 'Telecomunicaciones', 'Transporte y Mensajería', 'Viajes', 'Viveros y plantas']
+        category_dondeestamos = st.selectbox("Empresa: category_dondeestamos", sector_categories, key="category_dondeestamos", index=None)
+
+        st.info("A partir de aquí se rellenan automáticamente con el excel.")
         email_default = df['email'][0] if df is not None and 'email' in df.columns else ""
         email = st.text_input("Usuario: email", email_default, key="email")
 
@@ -157,9 +163,6 @@ def get_robot_variables(kit_digital: KitDigital, dondeestamos_province: str) -> 
         postal_default = df['postal'][0] if df is not None and 'postal' in df.columns else ""
         postal = st.text_input("Empresa: postal", postal_default, key="postal")
 
-        sector_categories = ['Abogados', 'Aeronautica', 'Agropecuaria', 'Alimentación y bebidas', 'Animales', 'Arquitectura', 'Artes gráficas e Imprentas', 'Artesanía', 'Asesoría', 'Asociaciones profesionales', 'Audiovisuales', 'Automoción', 'Banca', 'Bazar', 'Carpinteria', 'Centros asistenciales', 'Centros Medicos', 'Cerrajerias', 'Climatizacion', 'Construcción e Inmobiliaria', 'Consultoria', 'Distribución', 'Electricidad', 'Electrodomésticos', 'Energias Renovables', 'Enseñanza', 'Envases y Embalajes', 'Equipamiento industrial', 'Extracciones minerales', 'Ferreterías', 'Fontanerías', 'Formación', 'Fumigación', 'Guarderias', 'Hostelería y Restauración', 'Hoteles', 'Industria', 'Informática y Electrónica', 'Ingeniería', 'Jugueterías', 'Laboratorios', 'Limpieza', 'Medio Ambiente', 'Metalurgia', 'Mobiliario y Decoración', 'Moda', 'Ocio infantil', 'Ocio y Deportes', 'Otros', 'Pinturas', 'Piscinas', 'Publicidad', 'Químico', 'Reciclados', 'Reciclaje', 'Salud y Belleza', 'Seguridad', 'Seguros', 'Servicios', 'Servicios públicos', 'Suministros Indsutriales', 'Telecomunicaciones', 'Transporte y Mensajería', 'Viajes', 'Viveros y plantas']
-        category_dondeestamos = st.selectbox("Empresa: category_dondeestamos", sector_categories, key="category_dondeestamos")
-
         keywords_default = df['keywords'][0] if df is not None and 'keywords' in df.columns else ""
         keywords = st.text_input("Empresa: keywords", keywords_default, key="keywords")
 
@@ -176,6 +179,10 @@ def get_robot_variables(kit_digital: KitDigital, dondeestamos_province: str) -> 
             # Check passwords
             if password != repeat_password:
                 st.error("Las contraseñas no coinciden.")
+                errors = True
+
+            if not category_dondeestamos:
+                st.error("La categoría de la empresa no puede estar vacía.")
                 errors = True
             
             # Check long description
