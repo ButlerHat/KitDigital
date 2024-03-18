@@ -184,6 +184,9 @@ val = stx.stepper_bar(steps=[
 
 # Crawl urls
 if val == 0:
+    with st.expander("Tutorial en vídeo", expanded=False):
+        st.video("https://youtu.be/gjMS0kFQwyw")
+
     col1, col2 = st.columns([4, 1])
     with col1:
         display_title("Aceptar cookies", kit_digital.stages[StageType.ACCEPT_COOKIES].status)
@@ -204,6 +207,9 @@ if val == 0:
         st.markdown("### Se han aceptado las cookies por un usuario.")
 
 if val == 1:
+    with st.expander("Tutorial en vídeo", expanded=False):
+        st.video("https://youtu.be/nrlNjY8jmp0")
+
     col1, col2 = st.columns([4, 1])
     with col1:
         display_title("Obtener urls y seleccionar las válidas", kit_digital.stages[StageType.SELECT_URLS].status)
@@ -246,6 +252,8 @@ if val == 1:
             st.write(urls_stage.info["urls_multi"])
 
 if val == 2:
+    with st.expander("Tutorial en vídeo", expanded=False):
+        st.video("https://youtu.be/p5J038qah08")
     col1, col2 = st.columns([4, 1])
     with col1:
         display_title("Subir directorios", kit_digital.stages[StageType.DIRECTORIES].status)
@@ -286,6 +294,8 @@ if val == 2:
             st.rerun()
 
 if val == 3:
+    with st.expander("Tutorial en vídeo", expanded=False):
+        st.video("https://youtu.be/kPlPjTpIfdM")
     # SEO Basico
     col1, col2 = st.columns([4, 1])
     with col1:
@@ -306,6 +316,8 @@ if val == 3:
         kit_digital = show_modiffy_results(kit_digital)
 
 if val == 4:
+    with st.expander("Tutorial en vídeo", expanded=False):
+        st.video("https://youtu.be/WgRdCuCTwoc")
     # Headers SEO
     col1, col2 = st.columns([4, 1])
     with col1:
@@ -327,6 +339,8 @@ if val == 4:
                 st.write(h)
 
 if val == 5:
+    with st.expander("Tutorial en vídeo", expanded=False):
+        st.video("https://youtu.be/ZOWwZux76oA")
     # Acreditacion cumplimiento en materia de publicidad
     col1, col2 = st.columns([4, 1])
     with col1:
@@ -368,6 +382,8 @@ if val == 5:
             )
 
 if val == 6:
+    with st.expander("Tutorial en vídeo", expanded=False):
+        st.video("https://youtu.be/xV6sh1NdnkU")
     # Plantilla de recopilacion de evidencias
     col1, col2 = st.columns([4, 1])
     with col1:
@@ -414,6 +430,8 @@ if val == 6:
         
 
 if val == 7:
+    with st.expander("Tutorial en vídeo", expanded=False):
+        st.video("https://youtu.be/QsELXW1BVuc")
     # Plantilla de recopilacion de evidencias multi-idioma
     col1, col2 = st.columns([4, 1])
     with col1:
@@ -465,6 +483,8 @@ if val == 7:
             
 
 if val == 8:
+    with st.expander("Tutorial en vídeo", expanded=False):
+        st.video("https://youtu.be/D8GAIhZgl2g")
     col1, col2 = st.columns([4, 1])
     with col1:
         display_title("Últimos ajustes", kit_digital.stages[StageType.LAST_TOUCHES].status)
@@ -500,5 +520,7 @@ else:
 
 
 if val == 9:
+    with st.expander("Tutorial en vídeo", expanded=False):
+        st.video("https://youtu.be/i87T5O5dG3I")
     display_title("Resultados",status_result)
     show_results(kit_digital)
