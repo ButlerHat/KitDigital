@@ -10,7 +10,7 @@ dependencies:
   - pip=22.1.2                  # https://pip.pypa.io/en/stable/news/
   - pip:
       # Define pip packages here -> https://pypi.org/
-      - streamlit
+      - streamlit==1.40.0
       - openpyxl
       - pyyaml
       - extra_streamlit_components

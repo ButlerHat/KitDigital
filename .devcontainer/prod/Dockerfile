@@ -9,6 +9,9 @@ ARG FIREBASE_CONFIG_BASE64
 ENV TZ='/usr/share/zoneinfo/Europe/Madrid'
 RUN sudo ln -snf $TZ /etc/localtime && echo "Europe/Madrid" > /etc/timezone
 
+# Install required system packages
+RUN sudo apt-get update && sudo apt-get install -y libgl1-mesa-glx
+
 # Install robotframework env
 ENV PIP_EXTRA_INDEX_URL=https://$PYPI_USER:$PYPI_PASS@pypiserver.paipaya.com/
 
@@ -51,4 +54,3 @@ RUN rm web/.streamlit/secrets.toml && cp web/.streamlit/secrets.prod.toml web/.s
 ENV FIREBASE_CONFIG_BASE64=$FIREBASE_CONFIG_BASE64
 
 CMD ["bash", "./.devcontainer/prod/postCreateCommand.sh"]
-
